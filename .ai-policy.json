@@ -1,0 +1,49 @@
+{
+  "protectedFiles": [
+    "*.env",
+    "*.env.*",
+    "*.pem",
+    "*.key",
+    "*.pub",
+    "credentials.json",
+    "secrets/",
+    "internal-config.yml"
+  ],
+  "excludedFiles": [
+    "**/node_modules/",
+    "**/.next/",
+    "dist/",
+    "build/",
+    "out/",
+    "*.log",
+    "*.tmp",
+    "*.bak",
+    "tmp/",
+    "temp/",
+    "logs/",
+    ".turbo/",
+    ".playground/",
+    ".tasks/"
+  ],
+  "whitelistedFiles": [],
+  "terminalAutoApprove": {
+    "/^git (log|status).*$/": true,
+    "/^yarn (lint|lint:ci|typecheck|typecheck:ci|sync:ai-policy|sync:ai-policy:import-vscode)$/": true,
+    "/^yarn (install | install --network-timeout 100000)$/": true,
+    "yarn tsc --project scripts/tsconfig.json --noEmit": true,
+    "rm": false,
+    "rmdir": false,
+    "del": false,
+    "curl": false,
+    "wget": false
+  },
+  "editAutoApprove": {
+    "**/*.{ts,tsx,js,mjs,mts,json,yml,yaml,css,md}": true,
+    "**/.env*": false,
+    "**/secrets/**": false,
+    "**/.aiexclude": false,
+    "**/.ai-policy.json": false,
+    "**/*.{pem,key,pub}": false,
+    "**/internal-config.yml": false
+  }
+}

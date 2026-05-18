@@ -1,0 +1,21 @@
+# Synced shared skills
+ref-agents-instructions-authoring/
+ref-agents-local-tasks/
+ref-agents-persona/
+ref-agents-security/
+ref-app-react-next/
+ref-coding-patterns/
+ref-docs-authoring/
+ref-git-commits/
+ref-github-actions-ci/
+ref-github-dependabot/
+ref-js-javascript/
+ref-js-next/
+ref-js-react/
+ref-js-typescript/
+ref-projects-architecture/
+ref-skills-authoring/
+tool-commit/
+tool-handle-agents-local-tasks/
+tool-maintain-agents-instructions/
+tool-maintain-skills/

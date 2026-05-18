@@ -1,0 +1,53 @@
+{
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.markdownlint": "always",
+    "source.fixAll.eslint": "always"
+  },
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
+  "json.format.enable": true,
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
+  "cSpell.words": [
+    "Klarna",
+    "swiftpost"
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "/^git (log|status).*$/": true,
+    "/^yarn (lint|lint:ci|typecheck|typecheck:ci|sync:ai-policy|sync:ai-policy:import-vscode)$/": true,
+    "/^yarn (install | install --network-timeout 100000)$/": true,
+    "yarn tsc --project scripts/tsconfig.json --noEmit": true,
+    "rm": false,
+    "rmdir": false,
+    "del": false,
+    "curl": false,
+    "wget": false
+  },
+  "files.associations": {
+    ".aiexclude": "ignore",
+    "*.env": "copilot-restricted-file",
+    "*.env.*": "copilot-restricted-file",
+    "*.pem": "copilot-restricted-file",
+    "*.key": "copilot-restricted-file",
+    "*.pub": "copilot-restricted-file",
+    "credentials.json": "copilot-restricted-file",
+    "secrets/": "copilot-restricted-file",
+    "internal-config.yml": "copilot-restricted-file"
+  },
+  "github.copilot.enable": {
+    "copilot-restricted-file": false
+  },
+  "chat.tools.edits.autoApprove": {
+    "**/*.{ts,tsx,js,mjs,mts,json,yml,yaml,css,md}": true,
+    "**/.env*": false,
+    "**/secrets/**": false,
+    "**/.aiexclude": false,
+    "**/.ai-policy.json": false,
+    "**/*.{pem,key,pub}": false,
+    "**/internal-config.yml": false
+  }
+}
