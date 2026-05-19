@@ -114,7 +114,8 @@ const criticalStatWarnings: Record<StatKey, string> = {
   gold: 'Il Tesoro è quasi vuoto: un altro -Oro porta alla bancarotta.',
   harmony:
     'La corte è sul punto di spezzarsi: un altro -Armonia rovina la festa.',
-  suspicion: 'Il Sospetto è al massimo: un altro +Sospetto scopre il segreto.',
+  suspicion:
+    'Il Sospetto è al massimo: un altro +Sospetto spezza la fiducia del Consiglio.',
 };
 
 const getCriticalStatWarning = (stat: StatPreview) => {
@@ -217,81 +218,76 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ stat }) => {
   const toneStyle = statToneStyles[stat.tone];
   const criticalWarning = getCriticalStatWarning(stat);
+  const hoverDetail = `${stat.label}: ${stat.valueLabel}${criticalWarning == null ? '' : `. ${criticalWarning}`}`;
 
   return (
     <Stack
       direction="row"
       alignItems="center"
-      gap={0.65}
+      gap={0.5}
+      aria-label={hoverDetail}
+      title={hoverDetail}
       sx={{
         minWidth: 0,
         border: `1px solid ${toneStyle.border}`,
         borderRadius: 1.5,
         background: toneStyle.background,
-        px: 0.75,
-        py: 0.55,
+        px: 0.6,
+        py: 0.45,
       }}
     >
       <Box
         component="img"
         src={stat.iconSrc}
         alt=""
-        sx={{ width: 21, height: 21, flex: '0 0 auto' }}
+        sx={{ width: 22, height: 22, flex: '0 0 auto' }}
       />
-      <Stack gap={0.2} sx={{ flex: '1 1 auto', minWidth: 0 }}>
-        <Stack direction="row" alignItems="center" gap={0.45} minWidth={0}>
-          <Text variant="caption" fontWeight={900} color="#fff7df" noWrap>
-            {stat.label}
-          </Text>
-          {criticalWarning != null ?
-            <Text
-              variant="caption"
-              fontWeight={900}
-              color="#fff3cf"
-              title={criticalWarning}
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 17,
-                height: 17,
-                borderRadius: '50%',
-                background: '#9d3426',
-                flex: '0 0 auto',
-                lineHeight: 1,
-              }}
-            >
-              !
-            </Text>
-          : null}
-        </Stack>
-        <Stack
-          direction="row"
-          gap={0.4}
-          aria-label={`${stat.label}: livello ${stat.valueLabel}`}
-        >
-          {[1, 2, 3].map((pipValue) => {
-            const isActive = pipValue <= stat.value;
+      <Stack
+        direction="row"
+        alignItems="center"
+        gap={0.35}
+        aria-hidden="true"
+        sx={{ flex: '0 0 auto' }}
+      >
+        {[1, 2, 3].map((pipValue) => {
+          const isActive = pipValue <= stat.value;
 
-            return (
-              <Box
-                key={pipValue}
-                sx={{
-                  width: 14,
-                  height: 5,
-                  borderRadius: 99,
-                  background:
-                    isActive ? toneStyle.color : 'rgb(255 255 255 / 18%)',
-                  boxShadow: isActive ? `0 0 12px ${toneStyle.color}` : 'none',
-                }}
-              />
-            );
-          })}
-        </Stack>
+          return (
+            <Box
+              key={pipValue}
+              sx={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background:
+                  isActive ? toneStyle.color : 'rgb(255 255 255 / 18%)',
+                boxShadow: isActive ? `0 0 10px ${toneStyle.color}` : 'none',
+              }}
+            />
+          );
+        })}
       </Stack>
-      <Text variant="caption" fontWeight={900} color={toneStyle.color} noWrap>
-        {stat.valueLabel}
-      </Text>
+      {criticalWarning != null ?
+        <Text
+          variant="caption"
+          fontWeight={900}
+          color="#fff3cf"
+          aria-hidden="true"
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            background: '#9d3426',
+            flex: '0 0 auto',
+            lineHeight: 1,
+          }}
+        >
+          !
+        </Text>
+      : null}
     </Stack>
   );
 };
@@ -305,11 +301,9 @@ const StatSummaryStrip: React.FC<StatSummaryStripProps> = ({ stats }) => {
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: {
-          xs: 'repeat(2, minmax(0, 1fr))',
-          md: 'repeat(4, minmax(0, 1fr))',
-        },
-        gap: 0.65,
+        gridTemplateColumns: 'repeat(4, minmax(0, max-content))',
+        gap: 0.45,
+        justifyContent: { xs: 'start', md: 'end' },
         minWidth: 0,
       }}
     >
@@ -321,12 +315,16 @@ const StatSummaryStrip: React.FC<StatSummaryStripProps> = ({ stats }) => {
 };
 
 const TopDecreeStatus: React.FC = () => {
+  const decreeDetail = 'Decreto sigillato: manufatto antico sotto chiave.';
+
   return (
     <Stack
       direction="row"
       alignItems="center"
       justifyContent="center"
       gap={0.85}
+      aria-label={decreeDetail}
+      title={decreeDetail}
       sx={{
         minWidth: 0,
         border: '1px solid rgb(236 199 117 / 18%)',
@@ -358,14 +356,227 @@ const TopDecreeStatus: React.FC = () => {
           variant="caption"
           color="#e8c56f"
           fontWeight={900}
-          noWrap
-          sx={{ textTransform: 'uppercase' }}
+          sx={{ lineHeight: 1.05, textTransform: 'uppercase' }}
         >
-          Decreto sigillato
+          Decreto
+          <br />
+          sigillato
         </Text>
-        <Text variant="caption" color="rgb(255 245 218 / 70%)" noWrap>
-          Manufatto antico sotto chiave
+      </Stack>
+    </Stack>
+  );
+};
+
+interface TopCalendarStatusProps {
+  onOpen: () => void;
+}
+
+const TopCalendarStatus: React.FC<TopCalendarStatusProps> = ({ onOpen }) => {
+  const calendarDetail = 'Udienza di compleanno: Scania, sala del trono.';
+
+  return (
+    <Button
+      aria-label={calendarDetail}
+      title={calendarDetail}
+      onClick={onOpen}
+      sx={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 42,
+        minWidth: 42,
+        height: 42,
+        minHeight: 42,
+        border: '1px solid rgb(236 199 117 / 18%)',
+        borderRadius: 1.5,
+        background: 'rgb(0 0 0 / 18%)',
+        color: '#fff7df',
+        flex: '0 0 auto',
+        p: 0,
+        '&:hover': {
+          borderColor: '#e8c56f',
+          background: 'rgb(232 197 111 / 12%)',
+        },
+      }}
+    >
+      <Box
+        component="img"
+        src={heroAssets.calendar.src}
+        alt=""
+        sx={{ width: 30, height: 30 }}
+      />
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 5,
+          right: 5,
+          width: 10,
+          height: 10,
+          border: '1px solid rgb(22 16 14 / 88%)',
+          borderRadius: '50%',
+          background: '#e8c56f',
+          boxShadow: '0 0 12px rgb(232 197 111 / 72%)',
+        }}
+      />
+    </Button>
+  );
+};
+
+const getCalendarGoal = (
+  gameState: CouncilGameState,
+  currentEvent: CouncilEvent,
+) => {
+  if (gameState.phase === 'intro') {
+    return {
+      eyebrow: 'Obiettivo attuale',
+      title: 'Convocare il Consiglio',
+      text: 'Raccogliete i consiglieri, proteggete il manufatto e mantenete il reame in equilibrio fino al sigillo finale.',
+    };
+  }
+
+  if (gameState.phase === 'event') {
+    return {
+      eyebrow: `Udienza ${gameState.currentEventIndex + 1} / ${councilEvents.length}`,
+      title: currentEvent.title,
+      text: 'Scegliete un decreto che tenga insieme risorse, fiducia e umori della corte senza spingere un valore oltre il limite.',
+    };
+  }
+
+  if (gameState.phase === 'result') {
+    return {
+      eyebrow: 'Decreto registrato',
+      title: 'Proseguire verso il prossimo sigillo',
+      text: 'Il Consiglio ha reagito. Valutate il nuovo equilibrio del reame prima di chiamare la prossima udienza.',
+    };
+  }
+
+  if (gameState.phase === 'ending') {
+    return {
+      eyebrow: 'Decreto finale',
+      title: 'Aprire il manufatto',
+      text: 'Il rito ha retto. Il Consiglio arretra e lascia alla Regina il gesto finale.',
+    };
+  }
+
+  return {
+    eyebrow: 'Consiglio interrotto',
+    title: 'Ricominciare con più prudenza',
+    text: 'Il reame non ha retto l’ultimo decreto. Una nuova partita permette di cercare una linea politica meno fragile.',
+  };
+};
+
+interface CalendarDetailModalProps {
+  currentEvent: CouncilEvent;
+  gameState: CouncilGameState;
+  open: boolean;
+  onClose: () => void;
+}
+
+const CalendarDetailModal: React.FC<CalendarDetailModalProps> = ({
+  currentEvent,
+  gameState,
+  open,
+  onClose,
+}) => {
+  if (!open) {
+    return null;
+  }
+
+  const goal = getCalendarGoal(gameState, currentEvent);
+
+  return (
+    <Stack
+      role="dialog"
+      aria-modal="true"
+      aria-label="Obiettivo dell'udienza"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        background: 'rgb(0 0 0 / 76%)',
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      <Stack
+        gap={2}
+        sx={{
+          ...panelSx,
+          width: 'min(760px, 100%)',
+          maxHeight: 'min(760px, 92dvh)',
+          overflow: 'auto',
+          p: { xs: 2, md: 3 },
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" gap={1.5}>
+          <Stack gap={0.35} minWidth={0}>
+            <Text
+              variant="overline"
+              color="#e8c56f"
+              letterSpacing={0}
+              fontWeight={900}
+            >
+              {goal.eyebrow}
+            </Text>
+            <Text variant="h5" fontWeight={900} color="#fff7df">
+              {goal.title}
+            </Text>
+          </Stack>
+          <Button
+            variant="text"
+            startIcon={<CloseIcon />}
+            onClick={onClose}
+            sx={{
+              color: '#f7e4b1',
+              fontFamily: 'inherit',
+              fontWeight: 900,
+              textTransform: 'none',
+            }}
+          >
+            Chiudi
+          </Button>
+        </Stack>
+
+        <Text
+          variant="body1"
+          color="rgb(255 245 218 / 82%)"
+          sx={{ lineHeight: 1.55 }}
+        >
+          {goal.text}
         </Text>
+
+        <Stack
+          gap={1}
+          sx={{
+            border: '1px solid rgb(232 197 111 / 24%)',
+            borderRadius: 1.5,
+            background: 'rgb(0 0 0 / 22%)',
+            p: 1.5,
+          }}
+        >
+          <Text
+            variant="overline"
+            color="#e8c56f"
+            letterSpacing={0}
+            fontWeight={900}
+          >
+            Mappa di Scania
+          </Text>
+          <Box
+            component="img"
+            src={heroAssets.minimap.src}
+            alt={heroAssets.minimap.alt}
+            sx={{
+              width: '100%',
+              maxHeight: 320,
+              objectFit: 'contain',
+              borderRadius: 1,
+              background: 'rgb(0 0 0 / 24%)',
+            }}
+          />
+        </Stack>
       </Stack>
     </Stack>
   );
@@ -386,18 +597,21 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({
 }) => {
   const sealSrc =
     earned ? seal.sealSrc : (seal.inactiveSealSrc ?? seal.sealSrc);
+  const sealDetail = `${seal.name}: ${earned ? 'sigillo conquistato' : seal.role}. Apri la scheda.`;
 
   return (
     <Button
       variant="text"
       aria-pressed={selected}
+      aria-label={sealDetail}
+      title={sealDetail}
       onClick={() => {
         onSelect(seal.id);
       }}
       sx={{
         width: '100%',
         minWidth: 0,
-        minHeight: 94,
+        minHeight: 78,
         border: `1px solid ${selected ? '#e8c56f' : 'rgb(232 197 111 / 20%)'}`,
         borderRadius: 1.5,
         background: selected ? 'rgb(232 197 111 / 12%)' : 'rgb(0 0 0 / 16%)',
@@ -411,14 +625,14 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({
         },
       }}
     >
-      <Stack alignItems="center" gap={0.35} sx={{ width: '100%', minWidth: 0 }}>
+      <Stack alignItems="center" gap={0.45} sx={{ width: '100%', minWidth: 0 }}>
         <Box
           component="img"
           src={sealSrc}
-          alt={`Sigillo di ${seal.name}`}
+          alt=""
           sx={{
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             objectFit: 'contain',
             filter:
               earned || seal.inactiveSealSrc != null ?
@@ -435,20 +649,6 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({
         >
           {seal.name}
         </Text>
-        <Text
-          variant="caption"
-          color="rgb(255 242 207 / 66%)"
-          textAlign="center"
-          noWrap
-        >
-          {earned ? 'Sigillato' : seal.role}
-        </Text>
-        <Stack direction="row" alignItems="center" gap={0.25}>
-          <InfoOutlinedIcon sx={{ fontSize: 13 }} />
-          <Text variant="caption" fontWeight={900} color="#f7e4b1" noWrap>
-            Scheda
-          </Text>
-        </Stack>
       </Stack>
     </Button>
   );
@@ -1320,14 +1520,12 @@ const IntroContent: React.FC<IntroContentProps> = ({ onStart }) => {
 interface EventContentProps {
   event: CouncilEvent;
   councillor: CouncillorProfile;
-  onOpenCouncillorDetail: (councillorId: CouncillorId) => void;
   onSelectChoice: (choice: CouncilChoice) => void;
 }
 
 const EventContent: React.FC<EventContentProps> = ({
   event,
   councillor,
-  onOpenCouncillorDetail,
   onSelectChoice,
 }) => {
   return (
@@ -1393,20 +1591,6 @@ const EventContent: React.FC<EventContentProps> = ({
         >
           {`"${councillor.motto}"`}
         </Text>
-        <Button
-          variant="outlined"
-          startIcon={<InfoOutlinedIcon />}
-          onClick={() => {
-            onOpenCouncillorDetail(councillor.id);
-          }}
-          sx={{
-            alignSelf: 'flex-start',
-            ...outlineButtonSx,
-            minHeight: 36,
-          }}
-        >
-          Apri scheda consigliere
-        </Button>
       </Stack>
 
       <Box
@@ -1898,7 +2082,6 @@ interface MainSceneContentProps {
   onStart: () => void;
   onContinue: () => void;
   onOpenArtifact: () => void;
-  onOpenCouncillorDetail: (councillorId: CouncillorId) => void;
   onReset: () => void;
   onSelectChoice: (choice: CouncilChoice) => void;
 }
@@ -1912,7 +2095,6 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
   onStart,
   onContinue,
   onOpenArtifact,
-  onOpenCouncillorDetail,
   onReset,
   onSelectChoice,
 }) => {
@@ -1925,7 +2107,6 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
       <EventContent
         event={currentEvent}
         councillor={currentCouncillor}
-        onOpenCouncillorDetail={onOpenCouncillorDetail}
         onSelectChoice={onSelectChoice}
       />
     );
@@ -1964,6 +2145,7 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
 
 const StrategyGameHome: React.FC = () => {
   const [artifactOpen, setArtifactOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<CouncilChoice>();
   const [profileModalCouncillorId, setProfileModalCouncillorId] =
     useState<CouncillorId>();
@@ -2016,6 +2198,7 @@ const StrategyGameHome: React.FC = () => {
 
   const handleNewGame = () => {
     setArtifactOpen(false);
+    setCalendarOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
@@ -2033,6 +2216,7 @@ const StrategyGameHome: React.FC = () => {
       'lauretana';
 
     setArtifactOpen(false);
+    setCalendarOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(savedCouncillor);
@@ -2041,6 +2225,7 @@ const StrategyGameHome: React.FC = () => {
   };
 
   const handleStartCouncil = () => {
+    setCalendarOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(currentEvent.councillorId);
@@ -2049,6 +2234,7 @@ const StrategyGameHome: React.FC = () => {
 
   const handleResetCouncil = () => {
     setArtifactOpen(false);
+    setCalendarOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
@@ -2122,35 +2308,18 @@ const StrategyGameHome: React.FC = () => {
             display: 'grid',
             gridTemplateColumns: {
               xs: '1fr',
-              md: 'minmax(150px, 0.5fr) minmax(205px, 0.66fr) minmax(190px, 0.58fr) minmax(360px, 1.26fr)',
+              md: 'max-content minmax(205px, 0.72fr) minmax(130px, 0.42fr) minmax(210px, 0.86fr)',
             },
             alignItems: 'center',
             gap: 1.25,
             flex: '0 0 auto',
           }}
         >
-          <Stack direction="row" alignItems="center" gap={1.25} minWidth={0}>
-            <Box
-              component="img"
-              src={heroAssets.calendar.src}
-              alt={heroAssets.calendar.alt}
-              sx={{ width: 32, height: 32, flex: '0 0 auto' }}
-            />
-            <Stack minWidth={0} sx={{ flex: '1 1 auto' }}>
-              <Text
-                variant="overline"
-                letterSpacing={0}
-                color="#e8c56f"
-                fontWeight={800}
-                noWrap
-              >
-                Udienza di compleanno
-              </Text>
-              <Text variant="body2" color="rgb(255 242 207 / 72%)" noWrap>
-                Scania, sala del trono
-              </Text>
-            </Stack>
-          </Stack>
+          <TopCalendarStatus
+            onOpen={() => {
+              setCalendarOpen(true);
+            }}
+          />
           <MusicControls
             musicEnabled={musicEnabled}
             musicVolume={musicVolume}
@@ -2210,9 +2379,6 @@ const StrategyGameHome: React.FC = () => {
                 onOpenArtifact={() => {
                   setArtifactOpen(true);
                 }}
-                onOpenCouncillorDetail={(councillorId) => {
-                  setProfileModalCouncillorId(councillorId);
-                }}
                 onReset={handleResetCouncil}
                 onSelectChoice={handleSelectChoice}
               />
@@ -2222,9 +2388,9 @@ const StrategyGameHome: React.FC = () => {
                   alignItems="center"
                   justifyContent="flex-end"
                   sx={{
-                    display: { xs: 'none', lg: 'flex' },
+                    display: { xs: 'none', md: 'flex' },
                     minHeight: { xs: 360, md: 540 },
-                    flex: { md: '0 0 190px', xl: '0 0 220px' },
+                    flex: { md: '0 0 150px', lg: '0 0 190px', xl: '0 0 220px' },
                     position: 'relative',
                     pointerEvents: 'none',
                   }}
@@ -2234,7 +2400,7 @@ const StrategyGameHome: React.FC = () => {
                     src={activeFigure.src}
                     alt={activeFigure.alt}
                     sx={{
-                      width: { xs: 180, md: 178, xl: 210 },
+                      width: { xs: 180, md: 150, lg: 178, xl: 210 },
                       maxHeight: { xs: 420, md: 560 },
                       objectFit: 'contain',
                       filter: 'drop-shadow(0 28px 46px rgb(0 0 0 / 55%))',
@@ -2323,6 +2489,14 @@ const StrategyGameHome: React.FC = () => {
         councillor={profileModalCouncillor}
         onClose={() => {
           setProfileModalCouncillorId(undefined);
+        }}
+      />
+      <CalendarDetailModal
+        currentEvent={currentEvent}
+        gameState={gameState}
+        open={calendarOpen}
+        onClose={() => {
+          setCalendarOpen(false);
         }}
       />
       <ArtifactRevealModal

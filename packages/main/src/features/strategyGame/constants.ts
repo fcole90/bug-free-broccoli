@@ -160,9 +160,9 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     detail:
       'Giommaria vede ogni locanda come un ufficio informazioni con vino incluso. Sa muovere corrieri, voci e favori con velocità inquietante, ma considera la parola prudenza un consiglio opzionale dato da persone poco avventurose.',
     approach:
-      'È perfetto quando serve ridurre il Sospetto o far passare qualcosa sotto il naso della corte. Tenere il sigillo reale nelle tue mani evita che apra una seconda agenda.',
+      'È perfetto quando serve ridurre il Sospetto o far passare qualcosa senza far irrigidire la corte. Tenere il sigillo reale nelle tue mani evita che apra una seconda agenda.',
     warning:
-      'Troppa libertà agli informatori crea brindisi, canzoni e indizi. Se il Sospetto è già alto, un altro passo falso espone tutto.',
+      'Troppa libertà agli informatori crea brindisi, canzoni e domande ostili. Se il Sospetto è già alto, un altro passo falso spezza la fiducia.',
     fullSrc: publicAsset('/character-full-giommaria-200-560.png'),
     fullAlt: 'Giommaria il Locandiere, maestro di spie',
     mugshotSrc: publicAsset('/character-mugshot-giommaria-96.png'),
@@ -189,13 +189,13 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     id: 'roberta',
     name: 'Donna Roberta di Modena',
     role: 'Cancelliera',
-    traits: ['Gregaria', 'Compassionevole', 'Cronista'],
+    traits: ['Gregaria', 'Sperimentatrice', 'Testarda'],
     motto:
       'Un regno resta in piedi se qualcuno ricorda di invitare tutti al banchetto.',
     detail:
-      'Roberta salva la diplomazia con inviti, miti e una memoria di corte pericolosamente precisa. Dove altri vedono protocollo, lei vede persone che vogliono sentirsi incluse. Riesce a far sembrare una lista posti un trattato di pace, e questo è un talento raro.',
+      'Roberta organizza matrimoni, assaggi e banchetti come piccole opere diplomatiche. Non porta Armonia per magia: la costruisce facendo sedere le persone giuste, provando gusti nuovi e trasformando una lista di inviti in un patto sociale. Quando decide che un rito funziona, sa diventare ostinatamente impossibile da spostare.',
     approach:
-      'È la voce da ascoltare quando l’Armonia scricchiola. Le opzioni calde e inclusive proteggono il gruppo e rendono più credibile ogni copertura.',
+      'È la voce da ascoltare quando l’Armonia scricchiola, soprattutto se inviti, sapori o tradizioni possono diventare un linguaggio comune. Le sue opzioni migliori includono la corte, ma la sua testardaggine punisce chi liquida il cerimoniale come dettaglio.',
     warning:
       'Dimenticare qualcuno o trattare gli inviti come dettagli minori rompe l’atmosfera. Se l’Armonia è già bassa, un’altra esclusione rovina la festa.',
     fullSrc: publicAsset('/character-full-roberta-200-560.png'),
@@ -276,7 +276,7 @@ export const councilEvents: CouncilEvent[] = [
         result: {
           title: 'Il Tesoro respira',
           description:
-            'Il Tesoro respira. Gli invitati, meno: qualcuno inizia a sospettare che il buffet sia stato tassato.',
+            'Il Tesoro respira. Gli invitati, meno: qualcuno inizia a guardare il buffet come un trattato ostile.',
         },
       },
       {
@@ -322,7 +322,7 @@ export const councilEvents: CouncilEvent[] = [
         result: {
           title: 'Brindisi pericolosi',
           description:
-            'Le informazioni arrivano abbondanti, insieme a tre canzoni e a un brindisi che contiene troppi indizi.',
+            'Le informazioni arrivano abbondanti, insieme a tre canzoni e a un brindisi che suona troppo complice.',
         },
       },
       {
@@ -391,7 +391,7 @@ export const councilEvents: CouncilEvent[] = [
     eyebrow: 'Quarta udienza',
     title: 'Diplomazia da Banchetto',
     setup:
-      'Donna Roberta porta inviti, miti e una calma psicologica che potrebbe pacificare due casate rivali. La sorpresa richiede calore umano, una leggenda condivisa e nessun nobile dimenticato fuori dalla sala.',
+      'Donna Roberta porta inviti, miti, assaggi audaci e una calma da organizzatrice di matrimoni. La sorpresa richiede calore umano, una leggenda condivisa e nessun nobile dimenticato fuori dalla sala.',
     choices: [
       {
         id: 'shared-legend',
@@ -472,7 +472,7 @@ export const councilEvents: CouncilEvent[] = [
         result: {
           title: 'Metodologia insufficiente',
           description:
-            "Phabous obbedisce, ma scrive 'metodologia insufficiente' su una pergamena abbastanza lunga da destare sospetti.",
+            "Phabous obbedisce, ma scrive 'metodologia insufficiente' su una pergamena abbastanza lunga da far irrigidire il Consiglio.",
         },
       },
     ],
@@ -490,7 +490,7 @@ export const endingDefinitions: Record<EndingTier, EndingDefinition> = {
   'golden-prosperity': {
     tier: 'golden-prosperity',
     title: 'Prosperità Dorata',
-    text: 'Le casse tintinnano, i registri sorridono e la corte scopre che perfino un piano segreto può avere un margine di bilancio rispettabile.',
+    text: 'Le casse tintinnano, i registri sorridono e la corte scopre che perfino un piano cerimoniale può avere un margine di bilancio rispettabile.',
     revealLine:
       'Il manufatto riposa in una custodia degna di un tesoro di corte.',
   },
@@ -499,12 +499,12 @@ export const endingDefinitions: Record<EndingTier, EndingDefinition> = {
     title: 'Leggenda di Corte',
     text: 'Inviti, miti e sorrisi si allineano in una storia che tutti vogliono raccontare. La sorpresa arriva come se fosse sempre stata parte della tradizione.',
     revealLine:
-      'Il manufatto attende il rito finale, circondato da un consenso quasi sospetto.',
+      'Il manufatto attende il rito finale, circondato da un consenso sorprendentemente compatto.',
   },
   'noble-chaos': {
     tier: 'noble-chaos',
     title: 'Un Nobile Caos',
-    text: 'Qualche indizio è trapelato e un piano è quasi esploso, ma la corte è ancora in piedi. Il Consiglio decide che questo, in fondo, è pienamente medievale.',
+    text: 'Qualche nervo è saltato e un piano è quasi esploso, ma la corte è ancora in piedi. Il Consiglio decide che questo, in fondo, è pienamente medievale.',
     revealLine: 'Il manufatto è salvo. Probabilmente. Aprirlo chiarirà tutto.',
   },
   'last-resort': {
@@ -525,10 +525,10 @@ export const defeatDefinitions: Record<DefeatReason, DefeatDefinition> = {
   },
   'suspicion-exposed': {
     reason: 'suspicion-exposed',
-    title: 'Sorpresa Scoperta',
-    text: 'Il Sospetto diventa troppo alto. Qualcuno collega corrieri, ricevute e locande con una sicurezza offensiva. Il Consiglio deve annullare la messinscena.',
+    title: 'Fiducia Spezzata',
+    text: 'Il Sospetto diventa troppo alto. Nobili e consiglieri leggono ogni gesto come una manovra ostile. Il Consiglio sospende il rito finché nessuno si fida più del tavolo.',
     imagePrompt:
-      'Immagine futura: un corridoio di corte con nobili che bisbigliano dietro ventagli, mentre un sigillo rotto rivela che il segreto è sfuggito.',
+      'Immagine futura: un corridoio di corte con nobili che bisbigliano dietro ventagli, consiglieri a braccia conserte e un sigillo intatto lasciato sul tavolo perché nessuno osa firmare.',
   },
   'treasury-empty': {
     reason: 'treasury-empty',
