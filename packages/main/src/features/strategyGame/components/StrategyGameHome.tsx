@@ -1,6 +1,7 @@
 'use client';
 
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
@@ -13,6 +14,7 @@ import Text from '@swiftpost/elysium/ui/base/Text';
 import {
   councilEvents,
   councilSealPreviews,
+  councillorProfiles,
   createStatPreviews,
   gameSubtitle,
   gameTitle,
@@ -27,6 +29,7 @@ import type {
   CouncilEvent,
   CouncilGameState,
   CouncilSealPreview,
+  CouncillorId,
   CouncillorProfile,
   StatPreview,
   StatTone,
@@ -220,49 +223,158 @@ const StatCard: React.FC<StatCardProps> = ({ stat }) => {
 interface CouncilSealProps {
   seal: CouncilSealPreview;
   earned: boolean;
+  selected: boolean;
+  onSelect: (councillorId: CouncillorId) => void;
 }
 
-const CouncilSeal: React.FC<CouncilSealProps> = ({ seal, earned }) => {
+const CouncilSeal: React.FC<CouncilSealProps> = ({
+  seal,
+  earned,
+  selected,
+  onSelect,
+}) => {
   const sealSrc =
     earned ? seal.sealSrc : (seal.inactiveSealSrc ?? seal.sealSrc);
 
   return (
-    <Stack alignItems="center" gap={0.75} sx={{ minWidth: 86 }}>
-      <Box
-        component="img"
-        src={sealSrc}
-        alt={`Sigillo di ${seal.name}`}
-        sx={{
-          width: 58,
-          height: 58,
-          objectFit: 'contain',
-          filter:
-            earned || seal.inactiveSealSrc != null ?
-              'none'
-            : 'grayscale(1) opacity(0.58)',
-        }}
-      />
-      <Text
-        variant="caption"
-        fontWeight={800}
-        color="#fff2cf"
-        textAlign="center"
-        noWrap
-      >
-        {seal.name}
-      </Text>
-      <Text
-        variant="caption"
-        color="rgb(255 242 207 / 66%)"
-        textAlign="center"
-        noWrap
-      >
-        {earned ? 'Sigillato' : seal.role}
-      </Text>
-    </Stack>
+    <Button
+      variant="text"
+      aria-pressed={selected}
+      onClick={() => {
+        onSelect(seal.id);
+      }}
+      sx={{
+        width: '100%',
+        minWidth: 0,
+        minHeight: 138,
+        border: `1px solid ${selected ? '#e8c56f' : 'rgb(232 197 111 / 20%)'}`,
+        borderRadius: 1.5,
+        background: selected ? 'rgb(232 197 111 / 12%)' : 'rgb(0 0 0 / 16%)',
+        color: '#fff2cf',
+        fontFamily: 'inherit',
+        p: 1,
+        textTransform: 'none',
+        '&:hover': {
+          borderColor: '#e8c56f',
+          background: 'rgb(232 197 111 / 12%)',
+        },
+      }}
+    >
+      <Stack alignItems="center" gap={0.75} sx={{ width: '100%', minWidth: 0 }}>
+        <Box
+          component="img"
+          src={sealSrc}
+          alt={`Sigillo di ${seal.name}`}
+          sx={{
+            width: 58,
+            height: 58,
+            objectFit: 'contain',
+            filter:
+              earned || seal.inactiveSealSrc != null ?
+                'none'
+              : 'grayscale(1) opacity(0.58)',
+          }}
+        />
+        <Text
+          variant="caption"
+          fontWeight={800}
+          color="inherit"
+          textAlign="center"
+          noWrap
+        >
+          {seal.name}
+        </Text>
+        <Text
+          variant="caption"
+          color="rgb(255 242 207 / 66%)"
+          textAlign="center"
+          noWrap
+        >
+          {earned ? 'Sigillato' : seal.role}
+        </Text>
+        <Stack direction="row" alignItems="center" gap={0.35}>
+          <InfoOutlinedIcon sx={{ fontSize: 15 }} />
+          <Text variant="caption" fontWeight={900} color="#f7e4b1" noWrap>
+            Scheda
+          </Text>
+        </Stack>
+      </Stack>
+    </Button>
   );
 };
 
+interface CouncillorInfoPanelProps {
+  councillor: CouncillorProfile;
+  inAudience: boolean;
+}
+
+const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
+  councillor,
+  inAudience,
+}) => {
+  return (
+    <Stack
+      gap={1.25}
+      sx={{
+        border: '1px solid rgb(232 197 111 / 28%)',
+        borderRadius: 1.5,
+        background: 'rgb(0 0 0 / 24%)',
+        p: 1.5,
+      }}
+    >
+      <Stack direction="row" alignItems="center" gap={1.25} minWidth={0}>
+        <Box
+          component="img"
+          src={councillor.mugshotSrc}
+          alt=""
+          sx={{
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            border: '1px solid rgb(232 197 111 / 44%)',
+            flex: '0 0 auto',
+          }}
+        />
+        <Stack gap={0.25} minWidth={0}>
+          <Text
+            variant="overline"
+            color="#e8c56f"
+            letterSpacing={0}
+            fontWeight={900}
+          >
+            Scheda consigliere
+          </Text>
+          <Text variant="body1" fontWeight={900} color="#fff7df" noWrap>
+            {councillor.name}
+          </Text>
+          <Text variant="body2" color="rgb(255 242 207 / 72%)" noWrap>
+            {councillor.role}
+          </Text>
+        </Stack>
+      </Stack>
+      <TraitChips traits={councillor.traits} />
+      <Text
+        variant="body2"
+        color="#f7e4b1"
+        sx={{ fontStyle: 'italic', lineHeight: 1.5 }}
+      >
+        {`"${councillor.motto}"`}
+      </Text>
+      <Text
+        variant="body2"
+        color="rgb(255 245 218 / 76%)"
+        sx={{ lineHeight: 1.55 }}
+      >
+        {councillor.detail}
+      </Text>
+      {inAudience ?
+        <Text variant="caption" fontWeight={900} color="#b9e6b9">
+          In udienza adesso
+        </Text>
+      : null}
+    </Stack>
+  );
+};
 interface TraitChipsProps {
   traits: readonly string[];
 }
@@ -730,6 +842,8 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
 
 const StrategyGameHome: React.FC = () => {
   const [detailsVisible, setDetailsVisible] = useState(false);
+  const [selectedCouncillorId, setSelectedCouncillorId] =
+    useState<CouncillorId>('lauretana');
   const { musicEnabled, musicVolume, setMusicVolume, toggleMusic } =
     useBackgroundMusic(musicConfig);
   const {
@@ -742,6 +856,7 @@ const StrategyGameHome: React.FC = () => {
     selectChoice,
   } = useCouncilGame();
   const statCards = createStatPreviews(gameState.stats);
+  const selectedCouncillor = councillorProfiles[selectedCouncillorId];
   const activeFigure =
     gameState.phase === 'intro' ?
       { src: heroAssets.georgia.src, alt: heroAssets.georgia.alt }
@@ -749,6 +864,7 @@ const StrategyGameHome: React.FC = () => {
 
   const handleStartCouncil = () => {
     setDetailsVisible(false);
+    setSelectedCouncillorId(currentEvent.councillorId);
     startCouncil();
   };
 
@@ -959,9 +1075,15 @@ const StrategyGameHome: React.FC = () => {
                     key={seal.id}
                     seal={seal}
                     earned={earnedSigilSet.has(seal.id)}
+                    selected={selectedCouncillorId === seal.id}
+                    onSelect={setSelectedCouncillorId}
                   />
                 ))}
               </Box>
+              <CouncillorInfoPanel
+                councillor={selectedCouncillor}
+                inAudience={selectedCouncillorId === currentEvent.councillorId}
+              />
             </Stack>
 
             <Stack
