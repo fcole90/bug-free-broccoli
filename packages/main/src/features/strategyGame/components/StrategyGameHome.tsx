@@ -2,6 +2,7 @@
 
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import { memo, useState } from 'react';
@@ -10,16 +11,27 @@ import Button from '@swiftpost/elysium/ui/base/Button';
 import Stack from '@swiftpost/elysium/ui/base/Stack';
 import Text from '@swiftpost/elysium/ui/base/Text';
 import {
+  councilEvents,
   councilSealPreviews,
+  createStatPreviews,
   gameSubtitle,
   gameTitle,
   heroAssets,
   musicConfig,
   openingLines,
-  statPreviews,
+  statDefinitions,
 } from '../constants';
-import type { CouncilSealPreview, StatPreview, StatTone } from '../types';
-import { useBackgroundMusic } from '../hooks';
+import type {
+  ChoiceResolution,
+  CouncilChoice,
+  CouncilEvent,
+  CouncilGameState,
+  CouncilSealPreview,
+  CouncillorProfile,
+  StatPreview,
+  StatTone,
+} from '../types';
+import { useBackgroundMusic, useCouncilGame } from '../hooks';
 
 const statToneStyles: Record<
   StatTone,
@@ -183,19 +195,23 @@ const StatCard: React.FC<StatCardProps> = ({ stat }) => {
         gap={0.75}
         aria-label={`${stat.label}: livello ${stat.valueLabel}`}
       >
-        {[0, 1, 2].map((pipIndex) => (
-          <Box
-            key={pipIndex}
-            sx={{
-              width: 22,
-              height: 8,
-              borderRadius: 99,
-              background:
-                pipIndex < 2 ? toneStyle.color : 'rgb(255 255 255 / 18%)',
-              boxShadow: pipIndex < 2 ? `0 0 16px ${toneStyle.color}` : 'none',
-            }}
-          />
-        ))}
+        {[1, 2, 3].map((pipValue) => {
+          const isActive = pipValue <= stat.value;
+
+          return (
+            <Box
+              key={pipValue}
+              sx={{
+                width: 22,
+                height: 8,
+                borderRadius: 99,
+                background:
+                  isActive ? toneStyle.color : 'rgb(255 255 255 / 18%)',
+                boxShadow: isActive ? `0 0 16px ${toneStyle.color}` : 'none',
+              }}
+            />
+          );
+        })}
       </Stack>
     </Stack>
   );
@@ -203,21 +219,27 @@ const StatCard: React.FC<StatCardProps> = ({ stat }) => {
 
 interface CouncilSealProps {
   seal: CouncilSealPreview;
+  earned: boolean;
 }
 
-const CouncilSeal: React.FC<CouncilSealProps> = ({ seal }) => {
+const CouncilSeal: React.FC<CouncilSealProps> = ({ seal, earned }) => {
+  const sealSrc =
+    earned ? seal.sealSrc : (seal.inactiveSealSrc ?? seal.sealSrc);
+
   return (
     <Stack alignItems="center" gap={0.75} sx={{ minWidth: 86 }}>
       <Box
         component="img"
-        src={seal.sealSrc}
+        src={sealSrc}
         alt={`Sigillo di ${seal.name}`}
         sx={{
           width: 58,
           height: 58,
           objectFit: 'contain',
           filter:
-            seal.id === 'lauretana' ? 'none' : 'grayscale(1) opacity(0.58)',
+            earned || seal.inactiveSealSrc != null ?
+              'none'
+            : 'grayscale(1) opacity(0.58)',
         }}
       />
       <Text
@@ -235,16 +257,509 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({ seal }) => {
         textAlign="center"
         noWrap
       >
-        {seal.role}
+        {earned ? 'Sigillato' : seal.role}
       </Text>
     </Stack>
   );
 };
 
+interface TraitChipsProps {
+  traits: readonly string[];
+}
+
+const TraitChips: React.FC<TraitChipsProps> = ({ traits }) => {
+  return (
+    <Stack direction="row" flexWrap="wrap" gap={0.75}>
+      {traits.map((trait) => (
+        <Text
+          key={trait}
+          variant="caption"
+          fontWeight={900}
+          color="#f7e4b1"
+          sx={{
+            border: '1px solid rgb(232 197 111 / 34%)',
+            borderRadius: 99,
+            background: 'rgb(232 197 111 / 10%)',
+            px: 1,
+            py: 0.35,
+          }}
+        >
+          {trait}
+        </Text>
+      ))}
+    </Stack>
+  );
+};
+
+interface StatDeltaListProps {
+  choice: CouncilChoice;
+}
+
+const StatDeltaList: React.FC<StatDeltaListProps> = ({ choice }) => {
+  return (
+    <Stack direction="row" flexWrap="wrap" gap={0.75}>
+      {statDefinitions.map((stat) => {
+        const delta = choice.statDeltas[stat.key];
+
+        if (delta == null || delta === 0) {
+          return null;
+        }
+
+        const toneStyle = statToneStyles[stat.tone];
+
+        return (
+          <Text
+            key={stat.key}
+            variant="caption"
+            fontWeight={900}
+            color={toneStyle.color}
+            sx={{
+              border: `1px solid ${toneStyle.border}`,
+              borderRadius: 99,
+              background: 'rgb(0 0 0 / 22%)',
+              px: 0.9,
+              py: 0.3,
+            }}
+          >
+            {delta > 0 ? '+' : ''}
+            {delta} {stat.label}
+          </Text>
+        );
+      })}
+    </Stack>
+  );
+};
+
+interface ChoiceButtonProps {
+  choice: CouncilChoice;
+  onSelect: (choice: CouncilChoice) => void;
+}
+
+const ChoiceButton: React.FC<ChoiceButtonProps> = ({ choice, onSelect }) => {
+  return (
+    <Button
+      variant="outlined"
+      fullWidth
+      onClick={() => {
+        onSelect(choice);
+      }}
+      sx={{
+        justifyContent: 'flex-start',
+        borderColor: 'rgb(232 197 111 / 36%)',
+        borderRadius: 1.5,
+        color: '#fff7df',
+        fontFamily: 'inherit',
+        minHeight: 92,
+        p: 1.4,
+        textAlign: 'left',
+        textTransform: 'none',
+        '&:hover': {
+          borderColor: '#e8c56f',
+          background: 'rgb(232 197 111 / 10%)',
+        },
+      }}
+    >
+      <Stack alignItems="flex-start" gap={0.75} sx={{ width: '100%' }}>
+        <Text variant="body1" fontWeight={900} color="inherit">
+          {choice.label}
+        </Text>
+        <Text variant="body2" color="rgb(255 245 218 / 72%)">
+          {choice.preview}
+        </Text>
+        <StatDeltaList choice={choice} />
+      </Stack>
+    </Button>
+  );
+};
+
+interface IntroContentProps {
+  onStart: () => void;
+}
+
+const IntroContent: React.FC<IntroContentProps> = ({ onStart }) => {
+  return (
+    <Stack gap={2} justifyContent="space-between" sx={{ flex: 1, minWidth: 0 }}>
+      <Stack gap={1.5}>
+        <Stack direction="row" alignItems="center" gap={1}>
+          <Box
+            component="img"
+            src={heroAssets.liegeCrown.src}
+            alt={heroAssets.liegeCrown.alt}
+            sx={{ width: 48, height: 48, objectFit: 'contain' }}
+          />
+          <Text
+            variant="overline"
+            color="#e8c56f"
+            letterSpacing={0}
+            fontWeight={900}
+          >
+            Regina Georgia dei Drumso
+          </Text>
+        </Stack>
+        <Text
+          component="h1"
+          sx={{
+            maxWidth: 680,
+            fontSize: { xs: 42, md: 52 },
+            lineHeight: 0.98,
+            fontWeight: 900,
+            color: '#fff3cf',
+            textShadow: '0 4px 28px rgb(0 0 0 / 42%)',
+          }}
+        >
+          {gameTitle}
+        </Text>
+        <Text
+          variant="h6"
+          component="p"
+          color="rgb(255 245 218 / 80%)"
+          sx={{ maxWidth: 640, lineHeight: 1.45 }}
+        >
+          {gameSubtitle}
+        </Text>
+      </Stack>
+
+      <Stack gap={1.25} sx={{ maxWidth: 680 }}>
+        {openingLines.map((line) => (
+          <Text
+            key={line}
+            variant="body1"
+            color="rgb(255 245 218 / 82%)"
+            sx={{ lineHeight: 1.55 }}
+          >
+            {line}
+          </Text>
+        ))}
+      </Stack>
+
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        gap={1.25}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+      >
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<PlayArrowIcon />}
+          onClick={onStart}
+          sx={{
+            minHeight: 54,
+            borderRadius: 1.5,
+            fontFamily: 'inherit',
+            fontWeight: 900,
+            px: 3,
+          }}
+        >
+          Convoca il Consiglio
+        </Button>
+        <Text variant="body2" color="rgb(255 242 207 / 68%)">
+          Le scelte mostreranno subito quali valori cambiano.
+        </Text>
+      </Stack>
+    </Stack>
+  );
+};
+
+interface EventContentProps {
+  event: CouncilEvent;
+  councillor: CouncillorProfile;
+  detailsVisible: boolean;
+  onToggleDetails: () => void;
+  onSelectChoice: (choice: CouncilChoice) => void;
+}
+
+const EventContent: React.FC<EventContentProps> = ({
+  event,
+  councillor,
+  detailsVisible,
+  onToggleDetails,
+  onSelectChoice,
+}) => {
+  return (
+    <Stack gap={2} sx={{ flex: 1, minWidth: 0 }}>
+      <Stack gap={1.25}>
+        <Text
+          variant="overline"
+          color="#e8c56f"
+          letterSpacing={0}
+          fontWeight={900}
+        >
+          {event.eyebrow}
+        </Text>
+        <Text
+          component="h1"
+          sx={{
+            maxWidth: 720,
+            fontSize: { xs: 38, md: 48 },
+            lineHeight: 1,
+            fontWeight: 900,
+            color: '#fff3cf',
+            textShadow: '0 4px 28px rgb(0 0 0 / 42%)',
+          }}
+        >
+          {event.title}
+        </Text>
+        <Stack direction="row" alignItems="center" gap={1.25} flexWrap="wrap">
+          <Box
+            component="img"
+            src={councillor.mugshotSrc}
+            alt=""
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              border: '1px solid rgb(232 197 111 / 44%)',
+            }}
+          />
+          <Stack minWidth={0}>
+            <Text variant="body1" fontWeight={900} color="#fff7df">
+              {councillor.name}
+            </Text>
+            <Text variant="body2" color="rgb(255 242 207 / 72%)">
+              {councillor.role}
+            </Text>
+          </Stack>
+        </Stack>
+        <TraitChips traits={councillor.traits} />
+      </Stack>
+
+      <Stack gap={1.25} sx={{ maxWidth: 720 }}>
+        <Text
+          variant="body1"
+          color="rgb(255 245 218 / 84%)"
+          sx={{ lineHeight: 1.55 }}
+        >
+          {event.setup}
+        </Text>
+        <Text
+          variant="body2"
+          color="#f7e4b1"
+          sx={{ fontStyle: 'italic', lineHeight: 1.5 }}
+        >
+          {`"${councillor.motto}"`}
+        </Text>
+        <Button
+          variant="text"
+          aria-pressed={detailsVisible}
+          onClick={onToggleDetails}
+          sx={{
+            alignSelf: 'flex-start',
+            color: '#e8c56f',
+            fontFamily: 'inherit',
+            fontWeight: 900,
+            px: 0,
+            textTransform: 'none',
+          }}
+        >
+          {detailsVisible ? 'Nascondi dettagli' : 'Mostra dettagli'}
+        </Button>
+        {detailsVisible ?
+          <Text
+            variant="body2"
+            color="rgb(255 245 218 / 76%)"
+            sx={{
+              borderLeft: '3px solid rgb(232 197 111 / 50%)',
+              pl: 1.5,
+              lineHeight: 1.55,
+            }}
+          >
+            {councillor.detail}
+          </Text>
+        : null}
+      </Stack>
+
+      <Stack gap={1} sx={{ maxWidth: 760 }}>
+        {event.choices.map((choice) => (
+          <ChoiceButton
+            key={choice.id}
+            choice={choice}
+            onSelect={onSelectChoice}
+          />
+        ))}
+      </Stack>
+    </Stack>
+  );
+};
+
+interface ResultContentProps {
+  resolution: ChoiceResolution;
+  councillor: CouncillorProfile;
+  onReset: () => void;
+}
+
+const ResultContent: React.FC<ResultContentProps> = ({
+  resolution,
+  councillor,
+  onReset,
+}) => {
+  const earnedSigil = resolution.earnedSigil != null;
+
+  return (
+    <Stack gap={2} sx={{ flex: 1, minWidth: 0 }}>
+      <Stack gap={1.25}>
+        <Text
+          variant="overline"
+          color="#e8c56f"
+          letterSpacing={0}
+          fontWeight={900}
+        >
+          Decreto registrato
+        </Text>
+        <Text
+          component="h1"
+          sx={{
+            maxWidth: 720,
+            fontSize: { xs: 38, md: 48 },
+            lineHeight: 1,
+            fontWeight: 900,
+            color: '#fff3cf',
+            textShadow: '0 4px 28px rgb(0 0 0 / 42%)',
+          }}
+        >
+          {resolution.choice.result.title}
+        </Text>
+        <Text
+          variant="body1"
+          color="rgb(255 245 218 / 84%)"
+          sx={{ maxWidth: 720, lineHeight: 1.55 }}
+        >
+          {resolution.choice.result.description}
+        </Text>
+      </Stack>
+
+      <Stack
+        gap={1}
+        sx={{
+          maxWidth: 720,
+          border: '1px solid rgb(232 197 111 / 28%)',
+          borderRadius: 1.5,
+          background: 'rgb(0 0 0 / 22%)',
+          p: 1.5,
+        }}
+      >
+        <Text variant="body1" fontWeight={900} color="#f7e4b1">
+          {earnedSigil ?
+            `Sigillo di ${councillor.name} ottenuto.`
+          : `Il sigillo di ${councillor.name} resta sul tavolo.`}
+        </Text>
+        <Text variant="body2" color="rgb(255 245 218 / 72%)">
+          {earnedSigil ?
+            'Il Consiglio riconosce che il decreto rispetta la sua arte.'
+          : 'La corte sopravvive al decreto, ma Lauretana prende nota con troppa precisione.'
+          }
+        </Text>
+        <StatDeltaList choice={resolution.choice} />
+      </Stack>
+
+      <Stack gap={1.25} sx={{ maxWidth: 720 }}>
+        <Text variant="body2" color="rgb(255 245 218 / 72%)">
+          Fuori dalla sala, altri quattro consiglieri fingono di non ascoltare.
+        </Text>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<RestartAltIcon />}
+          onClick={onReset}
+          sx={{
+            alignSelf: 'flex-start',
+            minHeight: 50,
+            borderRadius: 1.5,
+            fontFamily: 'inherit',
+            fontWeight: 900,
+            px: 2.5,
+          }}
+        >
+          Torna alla sala del trono
+        </Button>
+      </Stack>
+    </Stack>
+  );
+};
+
+interface MainSceneContentProps {
+  gameState: CouncilGameState;
+  currentEvent: CouncilEvent;
+  currentCouncillor: CouncillorProfile;
+  detailsVisible: boolean;
+  onStart: () => void;
+  onReset: () => void;
+  onToggleDetails: () => void;
+  onSelectChoice: (choice: CouncilChoice) => void;
+}
+
+const MainSceneContent: React.FC<MainSceneContentProps> = ({
+  gameState,
+  currentEvent,
+  currentCouncillor,
+  detailsVisible,
+  onStart,
+  onReset,
+  onToggleDetails,
+  onSelectChoice,
+}) => {
+  if (gameState.phase === 'intro') {
+    return <IntroContent onStart={onStart} />;
+  }
+
+  if (gameState.phase === 'event') {
+    return (
+      <EventContent
+        event={currentEvent}
+        councillor={currentCouncillor}
+        detailsVisible={detailsVisible}
+        onToggleDetails={onToggleDetails}
+        onSelectChoice={onSelectChoice}
+      />
+    );
+  }
+
+  if (gameState.latestResolution == null) {
+    return <IntroContent onStart={onStart} />;
+  }
+
+  return (
+    <ResultContent
+      resolution={gameState.latestResolution}
+      councillor={currentCouncillor}
+      onReset={onReset}
+    />
+  );
+};
+
 const StrategyGameHome: React.FC = () => {
-  const [councilSummoned, setCouncilSummoned] = useState(false);
+  const [detailsVisible, setDetailsVisible] = useState(false);
   const { musicEnabled, musicVolume, setMusicVolume, toggleMusic } =
     useBackgroundMusic(musicConfig);
+  const {
+    gameState,
+    currentEvent,
+    currentCouncillor,
+    earnedSigilSet,
+    startCouncil,
+    resetCouncil,
+    selectChoice,
+  } = useCouncilGame();
+  const statCards = createStatPreviews(gameState.stats);
+  const activeFigure =
+    gameState.phase === 'intro' ?
+      { src: heroAssets.georgia.src, alt: heroAssets.georgia.alt }
+    : { src: currentCouncillor.fullSrc, alt: currentCouncillor.fullAlt };
+
+  const handleStartCouncil = () => {
+    setDetailsVisible(false);
+    startCouncil();
+  };
+
+  const handleResetCouncil = () => {
+    setDetailsVisible(false);
+    resetCouncil();
+  };
+
+  const toggleDetails = () => {
+    setDetailsVisible((currentValue) => !currentValue);
+  };
 
   return (
     <Stack
@@ -332,100 +847,16 @@ const StrategyGameHome: React.FC = () => {
               gap={2}
               sx={{ position: 'relative', zIndex: 1, height: '100%' }}
             >
-              <Stack
-                gap={2}
-                justifyContent="space-between"
-                sx={{ flex: 1, minWidth: 0 }}
-              >
-                <Stack gap={1.5}>
-                  <Stack direction="row" alignItems="center" gap={1}>
-                    <Box
-                      component="img"
-                      src={heroAssets.liegeCrown.src}
-                      alt={heroAssets.liegeCrown.alt}
-                      sx={{ width: 48, height: 48, objectFit: 'contain' }}
-                    />
-                    <Text
-                      variant="overline"
-                      color="#e8c56f"
-                      letterSpacing={0}
-                      fontWeight={900}
-                    >
-                      Regina Georgia dei Drumso
-                    </Text>
-                  </Stack>
-                  <Text
-                    component="h1"
-                    sx={{
-                      maxWidth: 680,
-                      fontSize: 52,
-                      lineHeight: 0.98,
-                      fontWeight: 900,
-                      color: '#fff3cf',
-                      textShadow: '0 4px 28px rgb(0 0 0 / 42%)',
-                    }}
-                  >
-                    {gameTitle}
-                  </Text>
-                  <Text
-                    variant="h6"
-                    component="p"
-                    color="rgb(255 245 218 / 80%)"
-                    sx={{ maxWidth: 640, lineHeight: 1.45 }}
-                  >
-                    {gameSubtitle}
-                  </Text>
-                </Stack>
-
-                <Stack gap={1.25} sx={{ maxWidth: 680 }}>
-                  {openingLines.map((line) => (
-                    <Text
-                      key={line}
-                      variant="body1"
-                      color="rgb(255 245 218 / 82%)"
-                      sx={{ lineHeight: 1.55 }}
-                    >
-                      {line}
-                    </Text>
-                  ))}
-                </Stack>
-
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  gap={1.25}
-                  alignItems={{ xs: 'stretch', sm: 'center' }}
-                >
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    startIcon={<PlayArrowIcon />}
-                    onClick={() => {
-                      setCouncilSummoned(true);
-                    }}
-                    sx={{
-                      minHeight: 54,
-                      borderRadius: 1.5,
-                      fontFamily: 'inherit',
-                      fontWeight: 900,
-                      px: 3,
-                    }}
-                  >
-                    Convoca il Consiglio
-                  </Button>
-                  <Text
-                    variant="body2"
-                    color={
-                      councilSummoned ? '#b9e6b9' : 'rgb(255 242 207 / 68%)'
-                    }
-                  >
-                    {councilSummoned ?
-                      'La sala è pronta. Le udienze arriveranno nel prossimo passo.'
-                    : 'Avvio scenico pronto: musica, sigilli e sala sono già funzionanti.'
-                    }
-                  </Text>
-                </Stack>
-              </Stack>
+              <MainSceneContent
+                gameState={gameState}
+                currentEvent={currentEvent}
+                currentCouncillor={currentCouncillor}
+                detailsVisible={detailsVisible}
+                onStart={handleStartCouncil}
+                onReset={handleResetCouncil}
+                onToggleDetails={toggleDetails}
+                onSelectChoice={selectChoice}
+              />
 
               <Stack
                 alignItems="center"
@@ -438,8 +869,8 @@ const StrategyGameHome: React.FC = () => {
               >
                 <Box
                   component="img"
-                  src={heroAssets.georgia.src}
-                  alt={heroAssets.georgia.alt}
+                  src={activeFigure.src}
+                  alt={activeFigure.alt}
                   sx={{
                     width: { xs: 180, md: 220 },
                     maxHeight: { xs: 420, md: 560 },
@@ -471,10 +902,13 @@ const StrategyGameHome: React.FC = () => {
                   letterSpacing={0}
                   fontWeight={900}
                 >
-                  Stato iniziale del reame
+                  Stato del reame
                 </Text>
                 <Text variant="body2" color="rgb(255 242 207 / 70%)">
-                  2 / 3
+                  {gameState.phase === 'intro' ?
+                    'Valori iniziali'
+                  : `Udienza ${gameState.currentEventIndex + 1} / ${councilEvents.length}`
+                  }
                 </Text>
               </Stack>
               <Box
@@ -487,7 +921,7 @@ const StrategyGameHome: React.FC = () => {
                   gap: 1.25,
                 }}
               >
-                {statPreviews.map((stat) => (
+                {statCards.map((stat) => (
                   <StatCard key={stat.key} stat={stat} />
                 ))}
               </Box>
@@ -521,7 +955,11 @@ const StrategyGameHome: React.FC = () => {
                 }}
               >
                 {councilSealPreviews.map((seal) => (
-                  <CouncilSeal key={seal.id} seal={seal} />
+                  <CouncilSeal
+                    key={seal.id}
+                    seal={seal}
+                    earned={earnedSigilSet.has(seal.id)}
+                  />
                 ))}
               </Box>
             </Stack>
