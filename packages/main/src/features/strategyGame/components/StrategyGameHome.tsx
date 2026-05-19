@@ -7,7 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { memo, useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 import Box from '@swiftpost/elysium/ui/base/Box';
 import Button from '@swiftpost/elysium/ui/base/Button';
 import Stack from '@swiftpost/elysium/ui/base/Stack';
@@ -1502,203 +1502,67 @@ const ArtifactRevealModal: React.FC<ArtifactRevealModalProps> = ({
   open,
   onClose,
 }) => {
-  const [unlockValue, setUnlockValue] = useState(0);
-  const unlocked = unlockValue >= 100;
-
-  const handleUnlockInputChange = (
-    event:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.FormEvent<HTMLInputElement>,
-  ) => {
-    setUnlockValue(Number(event.currentTarget.value));
-  };
-
-  useEffect(() => {
-    if (!open) {
-      setUnlockValue(0);
-    }
-  }, [open]);
-
   if (!open) {
     return null;
   }
+
+  const trailerSrc = `${revealAssets.trailerEmbedUrl}?autoplay=1&rel=0`;
 
   return (
     <Stack
       role="dialog"
       aria-modal="true"
-      aria-label={unlocked ? 'Dono rivelato' : 'Manufatto sigillato'}
+      aria-label="Il manufatto si apre"
       alignItems="center"
       justifyContent="center"
       sx={{
         position: 'fixed',
         inset: 0,
         zIndex: 20,
-        background: 'rgb(0 0 0 / 86%)',
-        p: { xs: 2, md: 4 },
+        background: '#000',
+        p: { xs: 1.5, md: 4 },
       }}
     >
-      <Stack
-        gap={1.25}
+      <Button
+        variant="text"
+        startIcon={<CloseIcon />}
+        onClick={onClose}
         sx={{
-          width: 'min(980px, 100%)',
-          border: '1px solid rgb(232 197 111 / 34%)',
-          borderRadius: 2,
-          background:
-            'linear-gradient(180deg, rgb(29 22 18 / 96%), rgb(10 9 10 / 98%))',
-          boxShadow: '0 30px 120px rgb(0 0 0 / 62%)',
-          maxHeight: '92dvh',
-          overflow: 'auto',
-          p: { xs: 1.25, md: 1.75 },
+          position: 'absolute',
+          top: { xs: 12, md: 20 },
+          right: { xs: 12, md: 20 },
+          zIndex: 1,
+          color: '#f7e4b1',
+          fontFamily: 'inherit',
+          fontWeight: 900,
+          textTransform: 'none',
         }}
       >
-        <Stack direction="row" justifyContent="space-between" gap={1.5}>
-          <Text variant="body1" fontWeight={900} color="#fff7df">
-            {unlocked ? 'Il congegno si anima' : 'Sigillo del manufatto'}
-          </Text>
-          <Button
-            variant="text"
-            startIcon={<CloseIcon />}
-            onClick={onClose}
-            sx={{
-              color: '#f7e4b1',
-              fontFamily: 'inherit',
-              fontWeight: 900,
-              textTransform: 'none',
-            }}
-          >
-            Chiudi
-          </Button>
-        </Stack>
-
-        {unlocked ?
-          <Stack gap={1.5}>
-            <Stack
-              direction={{ xs: 'column', md: 'row' }}
-              gap={1.5}
-              alignItems="stretch"
-            >
-              <Box
-                component="img"
-                src={revealAssets.giftJumbo.src}
-                alt={revealAssets.giftJumbo.alt}
-                sx={{
-                  width: { xs: '100%', md: '58%' },
-                  maxHeight: 300,
-                  objectFit: 'contain',
-                  border: '1px solid rgb(232 197 111 / 34%)',
-                  borderRadius: 1.5,
-                  background: 'rgb(0 0 0 / 26%)',
-                  p: 1,
-                }}
-              />
-              <Stack
-                gap={1.25}
-                sx={{
-                  flex: 1,
-                  border: '1px solid rgb(232 197 111 / 28%)',
-                  borderRadius: 1.5,
-                  background: 'rgb(0 0 0 / 24%)',
-                  p: 1.5,
-                }}
-              >
-                <Box
-                  component="img"
-                  src={revealAssets.giftBundle.src}
-                  alt={revealAssets.giftBundle.alt}
-                  sx={{ width: '100%', maxHeight: 150, objectFit: 'contain' }}
-                />
-                <Text variant="h5" fontWeight={900} color="#fff7df">
-                  CK3 Starter Edition
-                </Text>
-                <Text
-                  variant="body2"
-                  color="rgb(255 245 218 / 76%)"
-                  sx={{ lineHeight: 1.5 }}
-                >
-                  Gioco base, espansioni e gloria dinastica: la corte ha
-                  custodito il segreto abbastanza a lungo.
-                </Text>
-              </Stack>
-            </Stack>
-
-            <Box
-              sx={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: '16 / 9',
-                overflow: 'hidden',
-                borderRadius: 1.5,
-                background: '#000',
-              }}
-            >
-              <Box
-                component="iframe"
-                src={revealAssets.trailerEmbedUrl}
-                title="Crusader Kings III trailer"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  width: '100%',
-                  height: '100%',
-                  border: 0,
-                }}
-              />
-            </Box>
-          </Stack>
-        : <Stack
-            gap={1.5}
-            sx={{
-              width: '100%',
-              border: '1px solid rgb(232 197 111 / 26%)',
-              borderRadius: 1.5,
-              background: 'rgb(0 0 0 / 24%)',
-              p: { xs: 1.5, md: 2 },
-            }}
-          >
-            <Text variant="h5" fontWeight={900} color="#fff3cf">
-              Fate scorrere il sigillo fino in fondo
-            </Text>
-            <Text
-              variant="body1"
-              color="rgb(255 245 218 / 78%)"
-              sx={{ lineHeight: 1.55 }}
-            >
-              Il Consiglio chiede una conferma solenne. Una volta aperto, il
-              manufatto non potrà più fingere di essere solo una pergamena.
-            </Text>
-            <Stack direction="row" alignItems="center" gap={1.25}>
-              <Text variant="caption" fontWeight={900} color="#f7e4b1" noWrap>
-                Chiuso
-              </Text>
-              <Box
-                component="input"
-                type="range"
-                min={0}
-                max={100}
-                step={1}
-                value={unlockValue}
-                aria-label="Apri il manufatto"
-                onChange={handleUnlockInputChange}
-                onInput={handleUnlockInputChange}
-                sx={{
-                  width: '100%',
-                  accentColor: '#e8c56f',
-                  cursor: 'pointer',
-                }}
-              />
-              <Text variant="caption" fontWeight={900} color="#f7e4b1" noWrap>
-                Aperto
-              </Text>
-            </Stack>
-            <Text variant="body2" color="rgb(255 242 207 / 68%)">
-              Avanzamento sigillo: {unlockValue}%
-            </Text>
-          </Stack>
-        }
-      </Stack>
+        Chiudi
+      </Button>
+      <Box
+        sx={{
+          position: 'relative',
+          width: 'min(1180px, 100%)',
+          aspectRatio: '16 / 9',
+          background: '#000',
+        }}
+      >
+        <Box
+          component="iframe"
+          src={trailerSrc}
+          title="Crusader Kings III trailer"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            border: 0,
+          }}
+        />
+      </Box>
     </Stack>
   );
 };
