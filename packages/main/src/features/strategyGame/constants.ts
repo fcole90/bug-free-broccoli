@@ -189,15 +189,15 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     id: 'roberta',
     name: 'Donna Roberta di Modena',
     role: 'Cancelliera',
-    traits: ['Gregaria', 'Sperimentatrice', 'Testarda'],
+    traits: ['Familiare', 'Premurosa', 'Testarda'],
     motto:
-      'Un regno resta in piedi se qualcuno ricorda di invitare tutti al banchetto.',
+      'Un regno resta in piedi se bambini, cugini e zii sanno dove sedersi.',
     detail:
-      'Roberta organizza matrimoni, assaggi e banchetti come piccole opere diplomatiche. Non porta Armonia per magia: la costruisce facendo sedere le persone giuste, provando gusti nuovi e trasformando una lista di inviti in un patto sociale. Quando decide che un rito funziona, sa diventare ostinatamente impossibile da spostare.',
+      'Roberta organizza matrimoni, tavolate di famiglia, merende per i bambini e assaggi nuovi come piccole opere diplomatiche. Non porta Armonia per magia: la costruisce ricordando chi deve sentirsi a casa, chi ha bisogno di un posto vicino ai figli e quale sapore può trasformare un pranzo in un ricordo comune. Quando decide che un rito familiare funziona, sa diventare ostinatamente impossibile da spostare.',
     approach:
-      'È la voce da ascoltare quando l’Armonia scricchiola, soprattutto se inviti, sapori o tradizioni possono diventare un linguaggio comune. Le sue opzioni migliori includono la corte, ma la sua testardaggine punisce chi liquida il cerimoniale come dettaglio.',
+      'È la voce da ascoltare quando parentele, bambini e tavolate rischiano di diventare caos. Le sue opzioni migliori trasformano famiglia, sapori e tradizioni in un patto sociale, ma la sua testardaggine punisce chi liquida il cerimoniale domestico come dettaglio.',
     warning:
-      'Dimenticare qualcuno o trattare gli inviti come dettagli minori rompe l’atmosfera. Se l’Armonia è già bassa, un’altra esclusione rovina la festa.',
+      'Dimenticare un ramo della famiglia, ignorare i bambini o trattare gli inviti come dettagli minori rompe l’atmosfera. Se l’Armonia è già bassa, un’altra esclusione rovina la festa.',
     fullSrc: publicAsset('/character-full-roberta-200-560.png'),
     fullAlt: 'Donna Roberta di Modena, cancelliera del Consiglio',
     mugshotSrc: publicAsset('/character-mugshot-roberta-96.png'),
@@ -391,7 +391,7 @@ export const councilEvents: CouncilEvent[] = [
     eyebrow: 'Quarta udienza',
     title: 'Diplomazia da Banchetto',
     setup:
-      'Donna Roberta porta inviti, miti, assaggi audaci e una calma da organizzatrice di matrimoni. La sorpresa richiede calore umano, una leggenda condivisa e nessun nobile dimenticato fuori dalla sala.',
+      'Donna Roberta porta inviti di famiglia, posti per i bambini, assaggi audaci e una calma da organizzatrice di matrimoni. La sorpresa richiede calore domestico, una leggenda condivisa e nessun nobile dimenticato fuori dalla sala.',
     choices: [
       {
         id: 'shared-legend',
@@ -526,7 +526,7 @@ export const defeatDefinitions: Record<DefeatReason, DefeatDefinition> = {
   'suspicion-exposed': {
     reason: 'suspicion-exposed',
     title: 'Fiducia Spezzata',
-    text: 'Il Sospetto diventa troppo alto. Nobili e consiglieri leggono ogni gesto come una manovra ostile. Il Consiglio sospende il rito finché nessuno si fida più del tavolo.',
+    text: 'Il Sospetto diventa troppo alto. Nobili e consiglieri leggono ogni gesto come una manovra ostile. Il Consiglio sospende il rito perché nessuno si fida più.',
     imagePrompt:
       'Immagine futura: un corridoio di corte con nobili che bisbigliano dietro ventagli, consiglieri a braccia conserte e un sigillo intatto lasciato sul tavolo perché nessuno osa firmare.',
   },
