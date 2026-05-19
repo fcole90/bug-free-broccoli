@@ -145,7 +145,9 @@ After pushing to GitHub, use `yarn check-gh-actions --watch` to monitor GitHub A
 ## Quick Commands
 
 - `yarn dev` — Start Next.js dev server (Turbopack)
+- `yarn dev:clean` — Remove `packages/main/.next` cross-platform, then start the Next.js dev server
 - `yarn build` — Production build (static export)
+- `yarn build:clean` — Remove `packages/main/.next` cross-platform, then run the production build
 - `yarn check-gh-actions` — Check GitHub Actions runs for the current branch and HEAD commit; supports `--watch` and `--all`
 - `yarn lint` — ESLint check (all packages via Turbo)
 - `yarn lint:ci` — ESLint check in stream mode for CI and AI terminal use

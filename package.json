@@ -13,8 +13,11 @@
   ],
   "scripts": {
     "dev": "yarn workspace @swiftpost/main dev",
+    "dev:clean": "yarn clean:next && yarn dev",
     "build": "yarn workspace @swiftpost/main build",
+    "build:clean": "yarn clean:next && yarn build",
     "start": "yarn workspace @swiftpost/main start",
+    "clean:next": "node scripts/clean-next.mjs",
     "check-gh-actions": "node --experimental-strip-types scripts/check-gh-actions.mts",
     "ck3:assets": "node scripts/ck3-asset-tools.mjs",
     "lint": "turbo lint",
