@@ -37,7 +37,10 @@ export type DefeatReason =
   | 'harmony-broken';
 
 export interface MusicConfig {
-  src: string;
+  introSrc: string;
+  councilSrc: string;
+  victorySrc: string;
+  defeatSrc: string;
   defaultVolume: MusicVolume;
 }
 

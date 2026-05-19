@@ -7,7 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import Box from '@swiftpost/elysium/ui/base/Box';
 import Button from '@swiftpost/elysium/ui/base/Button';
 import Stack from '@swiftpost/elysium/ui/base/Stack';
@@ -186,10 +186,7 @@ const getEndingExplanationLines = (gameState: CouncilGameState) => {
 };
 
 const getDefeatExplanationLines = (gameState: CouncilGameState) => {
-  const latestTitle = gameState.latestResolution?.choice.result.title;
   const statsSummary = getStatsSummary(gameState.stats);
-  const finalDecreeLine =
-    latestTitle == null ? undefined : `Ultimo decreto: ${latestTitle}.`;
   const ruleLine =
     'Regola: Stress e Sospetto fanno perdere oltre 3; Oro e Armonia fanno perdere sotto 1.';
 
@@ -208,9 +205,7 @@ const getDefeatExplanationLines = (gameState: CouncilGameState) => {
     }
   })();
 
-  return [triggerLine, ruleLine, statsSummary, finalDecreeLine].filter(
-    (line): line is string => line != null,
-  );
+  return [triggerLine, ruleLine, statsSummary];
 };
 
 interface MusicControlsProps {
@@ -401,37 +396,32 @@ const StatSummaryStrip: React.FC<StatSummaryStripProps> = ({ stats }) => {
   );
 };
 
-interface TopDecreeStatusProps {
+interface TopObjectiveStatusProps {
   phase: CouncilGameState['phase'];
-  onOpenArtifact: () => void;
+  onOpen: () => void;
 }
 
-const TopDecreeStatus: React.FC<TopDecreeStatusProps> = ({
+const TopObjectiveStatus: React.FC<TopObjectiveStatusProps> = ({
   phase,
-  onOpenArtifact,
+  onOpen,
 }) => {
   const unlocked = phase === 'ending';
   const failed = phase === 'defeat';
   const decreeDetail =
-    unlocked ? 'Decreto pronto: apri il manufatto sigillato.'
+    unlocked ? 'Decreto pronto: il manufatto attende il gesto finale.'
     : failed ? 'Decreto fallito: il rito non può aprire il manufatto.'
     : 'Decreto sigillato: manufatto antico sotto chiave.';
-  const firstLine = 'Decreto';
   const secondLine =
     unlocked ? 'pronto'
     : failed ? 'fallito'
     : 'sigillato';
+  const buttonDetail = `${decreeDetail} Apri regole, obiettivo e mappa di Scania.`;
 
   return (
     <Button
-      aria-label={decreeDetail}
-      aria-disabled={!unlocked}
-      title={decreeDetail}
-      onClick={() => {
-        if (unlocked) {
-          onOpenArtifact();
-        }
-      }}
+      aria-label={buttonDetail}
+      title={buttonDetail}
+      onClick={onOpen}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -442,30 +432,37 @@ const TopDecreeStatus: React.FC<TopDecreeStatusProps> = ({
         borderRadius: 1.5,
         background: 'rgb(0 0 0 / 18%)',
         color: '#fff7df',
-        cursor: unlocked ? 'pointer' : 'default',
         fontFamily: 'inherit',
         textTransform: 'none',
         px: 1,
         py: 0.75,
         '&:hover': {
-          borderColor: unlocked ? '#e8c56f' : 'rgb(236 199 117 / 18%)',
-          background: unlocked ? 'rgb(232 197 111 / 12%)' : 'rgb(0 0 0 / 18%)',
+          borderColor: '#e8c56f',
+          background: 'rgb(232 197 111 / 12%)',
         },
       }}
     >
-      <Box
-        component="img"
-        src={heroAssets.sealedScrolls.src}
-        alt=""
-        sx={{
-          width: 42,
-          height: 30,
-          objectFit: 'contain',
-          borderRadius: 1,
-          background: 'rgb(0 0 0 / 22%)',
-          flex: '0 0 auto',
-        }}
-      />
+      <Stack direction="row" alignItems="center" gap={0.35}>
+        <Box
+          component="img"
+          src={heroAssets.sealedScrolls.src}
+          alt=""
+          sx={{
+            width: 40,
+            height: 30,
+            objectFit: 'contain',
+            borderRadius: 1,
+            background: 'rgb(0 0 0 / 22%)',
+            flex: '0 0 auto',
+          }}
+        />
+        <Box
+          component="img"
+          src={heroAssets.calendar.src}
+          alt=""
+          sx={{ width: 25, height: 25, flex: '0 0 auto' }}
+        />
+      </Stack>
       <Stack
         gap={0.1}
         minWidth={0}
@@ -477,67 +474,11 @@ const TopDecreeStatus: React.FC<TopDecreeStatusProps> = ({
           fontWeight={900}
           sx={{ lineHeight: 1.05, textTransform: 'uppercase' }}
         >
-          {firstLine}
+          Decreto
           <br />
           {secondLine}
         </Text>
       </Stack>
-    </Button>
-  );
-};
-
-interface TopCalendarStatusProps {
-  onOpen: () => void;
-}
-
-const TopCalendarStatus: React.FC<TopCalendarStatusProps> = ({ onOpen }) => {
-  const calendarDetail = 'Udienza di compleanno: Scania, sala del trono.';
-
-  return (
-    <Button
-      aria-label={calendarDetail}
-      title={calendarDetail}
-      onClick={onOpen}
-      sx={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 42,
-        minWidth: 42,
-        height: 42,
-        minHeight: 42,
-        border: '1px solid rgb(236 199 117 / 18%)',
-        borderRadius: 1.5,
-        background: 'rgb(0 0 0 / 18%)',
-        color: '#fff7df',
-        flex: '0 0 auto',
-        p: 0,
-        '&:hover': {
-          borderColor: '#e8c56f',
-          background: 'rgb(232 197 111 / 12%)',
-        },
-      }}
-    >
-      <Box
-        component="img"
-        src={heroAssets.calendar.src}
-        alt=""
-        sx={{ width: 30, height: 30 }}
-      />
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 5,
-          right: 5,
-          width: 10,
-          height: 10,
-          border: '1px solid rgb(22 16 14 / 88%)',
-          borderRadius: '50%',
-          background: '#e8c56f',
-          boxShadow: '0 0 12px rgb(232 197 111 / 72%)',
-        }}
-      />
     </Button>
   );
 };
@@ -581,18 +522,25 @@ const getCalendarGoal = (
   return {
     eyebrow: 'Consiglio interrotto',
     title: 'Ricominciare con più prudenza',
-    text: 'Il reame non ha retto l’ultimo decreto. Una nuova partita permette di cercare una linea politica meno fragile.',
+    text: 'Il reame non ha retto la pressione del Consiglio. Una nuova partita permette di cercare una linea politica meno fragile.',
   };
 };
 
-interface CalendarDetailModalProps {
+const councilRuleLines = [
+  'Stress e Sospetto fanno perdere se una scelta li porta oltre 3.',
+  'Oro e Armonia fanno perdere se una scelta li porta sotto 1.',
+  'I sigilli dei consiglieri aiutano il finale, ma le mosse migliori hanno sempre un costo.',
+  'Quando il rito regge fino alla fine, il manufatto si apre dal decreto finale.',
+] as const;
+
+interface ObjectiveDetailModalProps {
   currentEvent: CouncilEvent;
   gameState: CouncilGameState;
   open: boolean;
   onClose: () => void;
 }
 
-const CalendarDetailModal: React.FC<CalendarDetailModalProps> = ({
+const ObjectiveDetailModal: React.FC<ObjectiveDetailModalProps> = ({
   currentEvent,
   gameState,
   open,
@@ -608,7 +556,7 @@ const CalendarDetailModal: React.FC<CalendarDetailModalProps> = ({
     <Stack
       role="dialog"
       aria-modal="true"
-      aria-label="Obiettivo dell'udienza"
+      aria-label="Regole e obiettivo dell'udienza"
       alignItems="center"
       justifyContent="center"
       sx={{
@@ -665,6 +613,38 @@ const CalendarDetailModal: React.FC<CalendarDetailModalProps> = ({
         >
           {goal.text}
         </Text>
+
+        <Stack
+          gap={1}
+          sx={{
+            border: '1px solid rgb(232 197 111 / 24%)',
+            borderRadius: 1.5,
+            background: 'rgb(0 0 0 / 22%)',
+            p: 1.5,
+          }}
+        >
+          <Text
+            variant="overline"
+            color="#e8c56f"
+            letterSpacing={0}
+            fontWeight={900}
+          >
+            Regole del Consiglio
+          </Text>
+          <Stack component="ul" gap={0.65} sx={{ m: 0, pl: 2.2 }}>
+            {councilRuleLines.map((line) => (
+              <Text
+                key={line}
+                component="li"
+                variant="body2"
+                color="rgb(255 245 218 / 78%)"
+                sx={{ lineHeight: 1.5 }}
+              >
+                {line}
+              </Text>
+            ))}
+          </Stack>
+        </Stack>
 
         <Stack
           gap={1}
@@ -1327,19 +1307,6 @@ const ChoiceButton: React.FC<ChoiceButtonProps> = ({ choice, onSelect }) => {
         >
           {choice.label}
         </Text>
-        <Text
-          variant="body2"
-          color="rgb(255 245 218 / 72%)"
-          sx={{
-            display: '-webkit-box',
-            lineHeight: 1.3,
-            overflow: 'hidden',
-            WebkitBoxOrient: 'vertical',
-            WebkitLineClamp: 2,
-          }}
-        >
-          {choice.preview}
-        </Text>
         <StatDeltaList choice={choice} />
       </Stack>
     </Button>
@@ -1371,16 +1338,24 @@ const getSavedGameLabel = (
 
 interface MainMenuContentProps {
   hasSavedGame: boolean;
+  musicEnabled: boolean;
+  musicVolume: number;
   savedGameState?: CouncilGameState;
   storageReady: boolean;
+  onToggleMusic: () => void;
+  onVolumeChange: (nextVolume: number) => void;
   onNewGame: () => void;
   onLoadGame: () => void;
 }
 
 const MainMenuContent: React.FC<MainMenuContentProps> = ({
   hasSavedGame,
+  musicEnabled,
+  musicVolume,
   savedGameState,
   storageReady,
+  onToggleMusic,
+  onVolumeChange,
   onNewGame,
   onLoadGame,
 }) => {
@@ -1438,10 +1413,19 @@ const MainMenuContent: React.FC<MainMenuContentProps> = ({
             color="rgb(255 245 218 / 80%)"
             sx={{ maxWidth: 560, lineHeight: 1.55 }}
           >
-            Aprite una nuova udienza o riprendete un decreto sospeso. La musica
-            di corte partirà quando varcherete la soglia della sala.
+            Aprite una nuova udienza o riprendete un decreto sospeso. La taverna
+            è già sveglia, la sala del trono attende.
           </Text>
         </Stack>
+
+        <Box sx={{ width: 'min(360px, 100%)' }}>
+          <MusicControls
+            musicEnabled={musicEnabled}
+            musicVolume={musicVolume}
+            onToggleMusic={onToggleMusic}
+            onVolumeChange={onVolumeChange}
+          />
+        </Box>
 
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -2094,6 +2078,7 @@ const DefeatContent: React.FC<DefeatContentProps> = ({
   defeat,
   onReset,
 }) => {
+  const [chronicleOpen, setChronicleOpen] = useState(false);
   const [explanationOpen, setExplanationOpen] = useState(false);
   const explanationLines = getDefeatExplanationLines(gameState);
 
@@ -2148,44 +2133,39 @@ const DefeatContent: React.FC<DefeatContentProps> = ({
         Nuova partita
       </Button>
 
-      <Button
-        variant="outlined"
-        size="large"
-        startIcon={<InfoOutlinedIcon />}
-        onClick={() => {
-          setExplanationOpen(true);
-        }}
-        sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
-      >
-        Perché questo esito?
-      </Button>
-
-      {gameState.latestResolution != null ?
-        <Stack
-          gap={1}
-          sx={{
-            maxWidth: 760,
-            textAlign: 'left',
-            border: '1px solid rgb(232 197 111 / 24%)',
-            borderRadius: 1.5,
-            background: 'rgb(0 0 0 / 20%)',
-            p: 1.5,
+      <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+        <Button
+          variant="outlined"
+          size="large"
+          startIcon={<InfoOutlinedIcon />}
+          onClick={() => {
+            setChronicleOpen(true);
           }}
+          sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
         >
-          <Text variant="body1" fontWeight={900} color="#f7e4b1">
-            Ultimo decreto: {gameState.latestResolution.choice.result.title}
-          </Text>
-          <Text
-            variant="body2"
-            color="rgb(255 245 218 / 74%)"
-            sx={{ lineHeight: 1.5 }}
-          >
-            {gameState.latestResolution.choice.result.description}
-          </Text>
-          <StatDeltaList choice={gameState.latestResolution.choice} />
-        </Stack>
-      : null}
+          Cronaca dei decreti
+        </Button>
 
+        <Button
+          variant="outlined"
+          size="large"
+          startIcon={<InfoOutlinedIcon />}
+          onClick={() => {
+            setExplanationOpen(true);
+          }}
+          sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
+        >
+          Perché questo esito?
+        </Button>
+      </Stack>
+
+      <CouncilChronicleModal
+        history={gameState.history}
+        open={chronicleOpen}
+        onClose={() => {
+          setChronicleOpen(false);
+        }}
+      />
       <EndStateExplanationModal
         lines={explanationLines}
         open={explanationOpen}
@@ -2267,29 +2247,31 @@ const EndingContent: React.FC<EndingContentProps> = ({
         Apri il manufatto
       </Button>
 
-      <Button
-        variant="outlined"
-        size="large"
-        startIcon={<InfoOutlinedIcon />}
-        onClick={() => {
-          setChronicleOpen(true);
-        }}
-        sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
-      >
-        Cronaca dei decreti
-      </Button>
+      <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+        <Button
+          variant="outlined"
+          size="large"
+          startIcon={<InfoOutlinedIcon />}
+          onClick={() => {
+            setChronicleOpen(true);
+          }}
+          sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
+        >
+          Cronaca dei decreti
+        </Button>
 
-      <Button
-        variant="outlined"
-        size="large"
-        startIcon={<InfoOutlinedIcon />}
-        onClick={() => {
-          setExplanationOpen(true);
-        }}
-        sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
-      >
-        Perché questo esito?
-      </Button>
+        <Button
+          variant="outlined"
+          size="large"
+          startIcon={<InfoOutlinedIcon />}
+          onClick={() => {
+            setExplanationOpen(true);
+          }}
+          sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
+        >
+          Perché questo esito?
+        </Button>
+      </Stack>
 
       <CouncilChronicleModal
         history={gameState.history}
@@ -2623,20 +2605,13 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
 const StrategyGameHome: React.FC = () => {
   const [artifactOpen, setArtifactOpen] = useState(false);
   const [artifactSealOpen, setArtifactSealOpen] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [objectiveOpen, setObjectiveOpen] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<CouncilChoice>();
   const [profileModalCouncillorId, setProfileModalCouncillorId] =
     useState<CouncillorId>();
   const [selectedCouncillorId, setSelectedCouncillorId] =
     useState<CouncillorId>('lauretana');
-  const {
-    musicEnabled,
-    musicVolume,
-    enableMusic,
-    pauseMusic,
-    setMusicVolume,
-    toggleMusic,
-  } = useBackgroundMusic(musicConfig);
+  const attemptedMenuMusicRef = useRef(false);
   const {
     gameState,
     currentEvent,
@@ -2653,6 +2628,22 @@ const StrategyGameHome: React.FC = () => {
     continueCouncil,
     selectChoice,
   } = useCouncilGame();
+  const activeMusicSrc =
+    !gameStarted ? musicConfig.introSrc
+    : gameState.phase === 'ending' ? musicConfig.victorySrc
+    : gameState.phase === 'defeat' ? musicConfig.defeatSrc
+    : musicConfig.councilSrc;
+  const {
+    musicEnabled,
+    musicVolume,
+    enableMusic,
+    pauseMusic,
+    setMusicVolume,
+    toggleMusic,
+  } = useBackgroundMusic({
+    src: activeMusicSrc,
+    defaultVolume: musicConfig.defaultVolume,
+  });
   const statCards = createStatPreviews(gameState.stats);
   const selectedCouncillor = councillorProfiles[selectedCouncillorId];
   const endingDefinition =
@@ -2674,10 +2665,19 @@ const StrategyGameHome: React.FC = () => {
       { src: heroAssets.georgia.src, alt: heroAssets.georgia.alt }
     : { src: currentCouncillor.fullSrc, alt: currentCouncillor.fullAlt };
 
+  useEffect(() => {
+    if (gameStarted || attemptedMenuMusicRef.current) {
+      return;
+    }
+
+    attemptedMenuMusicRef.current = true;
+    enableMusic();
+  }, [enableMusic, gameStarted]);
+
   const handleNewGame = () => {
     setArtifactOpen(false);
     setArtifactSealOpen(false);
-    setCalendarOpen(false);
+    setObjectiveOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
@@ -2696,7 +2696,7 @@ const StrategyGameHome: React.FC = () => {
 
     setArtifactOpen(false);
     setArtifactSealOpen(false);
-    setCalendarOpen(false);
+    setObjectiveOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(savedCouncillor);
@@ -2705,7 +2705,7 @@ const StrategyGameHome: React.FC = () => {
   };
 
   const handleStartCouncil = () => {
-    setCalendarOpen(false);
+    setObjectiveOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(currentEvent.councillorId);
@@ -2715,7 +2715,7 @@ const StrategyGameHome: React.FC = () => {
   const handleResetCouncil = () => {
     setArtifactOpen(false);
     setArtifactSealOpen(false);
-    setCalendarOpen(false);
+    setObjectiveOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
@@ -2745,6 +2745,11 @@ const StrategyGameHome: React.FC = () => {
     selectChoice(choice);
   };
 
+  const handleOpenArtifact = () => {
+    pauseMusic();
+    setArtifactOpen(true);
+  };
+
   const shellSx = {
     minHeight: '100dvh',
     width: '100%',
@@ -2760,8 +2765,12 @@ const StrategyGameHome: React.FC = () => {
       <Stack component="main" sx={shellSx}>
         <MainMenuContent
           hasSavedGame={hasSavedGame}
+          musicEnabled={musicEnabled}
+          musicVolume={musicVolume}
           savedGameState={savedGameState}
           storageReady={storageReady}
+          onToggleMusic={toggleMusic}
+          onVolumeChange={setMusicVolume}
           onNewGame={handleNewGame}
           onLoadGame={handleLoadGame}
         />
@@ -2789,16 +2798,17 @@ const StrategyGameHome: React.FC = () => {
             display: 'grid',
             gridTemplateColumns: {
               xs: '1fr',
-              md: 'max-content minmax(205px, 0.72fr) minmax(130px, 0.42fr) minmax(210px, 0.86fr)',
+              md: 'minmax(190px, 0.72fr) minmax(205px, 0.72fr) minmax(210px, 0.86fr)',
             },
             alignItems: 'center',
             gap: 1.25,
             flex: '0 0 auto',
           }}
         >
-          <TopCalendarStatus
+          <TopObjectiveStatus
+            phase={gameState.phase}
             onOpen={() => {
-              setCalendarOpen(true);
+              setObjectiveOpen(true);
             }}
           />
           <MusicControls
@@ -2806,12 +2816,6 @@ const StrategyGameHome: React.FC = () => {
             musicVolume={musicVolume}
             onToggleMusic={toggleMusic}
             onVolumeChange={setMusicVolume}
-          />
-          <TopDecreeStatus
-            phase={gameState.phase}
-            onOpenArtifact={() => {
-              setArtifactSealOpen(true);
-            }}
           />
           <StatSummaryStrip stats={statCards} />
         </Stack>
@@ -2977,12 +2981,12 @@ const StrategyGameHome: React.FC = () => {
           setProfileModalCouncillorId(undefined);
         }}
       />
-      <CalendarDetailModal
+      <ObjectiveDetailModal
         currentEvent={currentEvent}
         gameState={gameState}
-        open={calendarOpen}
+        open={objectiveOpen}
         onClose={() => {
-          setCalendarOpen(false);
+          setObjectiveOpen(false);
         }}
       />
       <ArtifactRevealModal
@@ -2998,7 +3002,7 @@ const StrategyGameHome: React.FC = () => {
         }}
         onOpenArtifact={() => {
           setArtifactSealOpen(false);
-          setArtifactOpen(true);
+          handleOpenArtifact();
         }}
       />
     </Stack>

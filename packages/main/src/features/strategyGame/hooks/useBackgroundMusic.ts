@@ -122,6 +122,19 @@ export const useBackgroundMusic = ({
   }, [musicVolume]);
 
   useEffect(() => {
+    const audioElement = audioElementRef.current;
+
+    if (audioElement == null || !musicEnabled) {
+      return;
+    }
+
+    audioElement.volume = musicVolume / 8;
+    void audioElement.play().catch(() => {
+      setMusicEnabled(false);
+    });
+  }, [musicEnabled, musicVolume, src]);
+
+  useEffect(() => {
     if (!storageReady) {
       return;
     }

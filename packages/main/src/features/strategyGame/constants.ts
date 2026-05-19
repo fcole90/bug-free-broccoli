@@ -42,8 +42,11 @@ export const gameSubtitle =
   'Cinque consiglieri, tre decreti per volta, una sorpresa reale da proteggere fino al sigillo finale.';
 
 export const musicConfig: MusicConfig = {
-  src: publicAsset('/genetliaco-resurrection-theme.mp3'),
-  defaultVolume: 4,
+  introSrc: publicAsset('/genetliaco-taberna-theme.mp3'),
+  councilSrc: publicAsset('/genetliaco-resurrection-theme.mp3'),
+  victorySrc: publicAsset('/genetliaco-tournament-theme.mp3'),
+  defeatSrc: publicAsset('/genetliaco-combat-theme.mp3'),
+  defaultVolume: 8,
 };
 
 export const heroAssets: Record<
