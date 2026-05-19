@@ -140,10 +140,13 @@ For AI-assisted terminal runs, prefer the `:ci` variants of Turbo tasks because 
 
 For AI-assisted terminal runs, execute finite commands whose final output and exit status matter in the foreground. That includes lint, type-check, tests, builds, and one-off scripts. Reserve async/background terminal use for long-running servers, watch tasks, log tails, or other commands intended to keep running. In this repo, `yarn lint:ci && yarn typecheck:ci` should be treated as a foreground command.
 
+After pushing to GitHub, use `yarn check-gh-actions --watch` to monitor GitHub Actions for the current branch and HEAD commit. Use `yarn check-gh-actions --all` when you need the latest branch runs instead of only the current commit.
+
 ## Quick Commands
 
 - `yarn dev` — Start Next.js dev server (Turbopack)
 - `yarn build` — Production build (static export)
+- `yarn check-gh-actions` — Check GitHub Actions runs for the current branch and HEAD commit; supports `--watch` and `--all`
 - `yarn lint` — ESLint check (all packages via Turbo)
 - `yarn lint:ci` — ESLint check in stream mode for CI and AI terminal use
 - `yarn lint:fix` — Auto-fix lint issues in stream mode for AI terminal use
