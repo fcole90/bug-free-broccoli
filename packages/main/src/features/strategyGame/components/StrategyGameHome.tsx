@@ -7,7 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import Box from '@swiftpost/elysium/ui/base/Box';
 import Button from '@swiftpost/elysium/ui/base/Button';
 import Stack from '@swiftpost/elysium/ui/base/Stack';
@@ -37,6 +37,7 @@ import type {
   CouncillorProfile,
   DefeatDefinition,
   EndingDefinition,
+  GameStats,
   HeroAsset,
   StatKey,
   StatPreview,
@@ -125,6 +126,91 @@ const getCriticalStatWarning = (stat: StatPreview) => {
   }
 
   return stat.value === 1 ? criticalStatWarnings[stat.key] : undefined;
+};
+
+const countWorstStats = (stats: GameStats) => {
+  const worstStats = [
+    stats.stress === 3,
+    stats.gold === 1,
+    stats.harmony === 1,
+    stats.suspicion === 3,
+  ];
+
+  return worstStats.filter(Boolean).length;
+};
+
+const getStatsSummary = (stats: GameStats) =>
+  `Stress ${stats.stress}/3, Oro ${stats.gold}/3, Armonia ${stats.harmony}/3, Sospetto ${stats.suspicion}/3.`;
+
+const getEndingExplanationLines = (gameState: CouncilGameState) => {
+  const earnedSigilCount = gameState.earnedSigils.length;
+  const worstStatCount = countWorstStats(gameState.stats);
+  const statsSummary = getStatsSummary(gameState.stats);
+
+  switch (gameState.endingTier) {
+    case 'dynastic-triumph':
+      return [
+        `Avete ottenuto ${earnedSigilCount} sigilli: ne bastano almeno 4 per questo finale.`,
+        'Lo Stress non è rimasto al livello massimo, quindi il rito arriva al decreto finale senza crollare.',
+        statsSummary,
+      ];
+    case 'golden-prosperity':
+      return [
+        "Non sono scattati prima l'Ultima Spiaggia o il Trionfo Dinastico.",
+        "L'Oro è arrivato al livello massimo e il Sospetto non è al livello massimo.",
+        'Il Consiglio legge il risultato come una vittoria del Tesoro più che della diplomazia.',
+        statsSummary,
+      ];
+    case 'courtly-legend':
+      return [
+        "Non sono scattati prima l'Ultima Spiaggia, il Trionfo Dinastico o la Prosperità Dorata.",
+        "L'Armonia è arrivata al livello massimo.",
+        'La corte ha scelto di raccontare il decreto come una leggenda condivisa.',
+        statsSummary,
+      ];
+    case 'last-resort':
+      return [
+        `Avete chiuso con ${earnedSigilCount} sigilli e ${worstStatCount} valori in zona critica.`,
+        'Questo finale scatta se i sigilli sono al massimo 1 oppure se almeno 2 valori sono al loro limite peggiore.',
+        statsSummary,
+      ];
+    case 'noble-chaos':
+    default:
+      return [
+        'Il rito è sopravvissuto senza cadere in una sconfitta, ma non ha centrato le condizioni dei finali più stabili.',
+        "Non sono scattati l'Ultima Spiaggia, il Trionfo Dinastico, la Prosperità Dorata o la Leggenda di Corte.",
+        `Sigilli ottenuti: ${earnedSigilCount}. Valori in zona critica: ${worstStatCount}.`,
+        statsSummary,
+      ];
+  }
+};
+
+const getDefeatExplanationLines = (gameState: CouncilGameState) => {
+  const latestTitle = gameState.latestResolution?.choice.result.title;
+  const statsSummary = getStatsSummary(gameState.stats);
+  const finalDecreeLine =
+    latestTitle == null ? undefined : `Ultimo decreto: ${latestTitle}.`;
+  const ruleLine =
+    'Regola: Stress e Sospetto fanno perdere oltre 3; Oro e Armonia fanno perdere sotto 1.';
+
+  const triggerLine = (() => {
+    switch (gameState.defeatReason) {
+      case 'stress-meltdown':
+        return 'La scelta finale avrebbe spinto lo Stress oltre il limite massimo.';
+      case 'suspicion-exposed':
+        return 'La scelta finale avrebbe spinto il Sospetto oltre il limite massimo.';
+      case 'treasury-empty':
+        return "La scelta finale avrebbe portato l'Oro sotto il minimo sostenibile.";
+      case 'harmony-broken':
+        return "La scelta finale avrebbe portato l'Armonia sotto il minimo sostenibile.";
+      default:
+        return 'Il Consiglio ha superato uno dei limiti di stabilità del rito.';
+    }
+  })();
+
+  return [triggerLine, ruleLine, statsSummary, finalDecreeLine].filter(
+    (line): line is string => line != null,
+  );
 };
 
 interface MusicControlsProps {
@@ -315,24 +401,56 @@ const StatSummaryStrip: React.FC<StatSummaryStripProps> = ({ stats }) => {
   );
 };
 
-const TopDecreeStatus: React.FC = () => {
-  const decreeDetail = 'Decreto sigillato: manufatto antico sotto chiave.';
+interface TopDecreeStatusProps {
+  phase: CouncilGameState['phase'];
+  onOpenArtifact: () => void;
+}
+
+const TopDecreeStatus: React.FC<TopDecreeStatusProps> = ({
+  phase,
+  onOpenArtifact,
+}) => {
+  const unlocked = phase === 'ending';
+  const failed = phase === 'defeat';
+  const decreeDetail =
+    unlocked ? 'Decreto pronto: apri il manufatto sigillato.'
+    : failed ? 'Decreto fallito: il rito non può aprire il manufatto.'
+    : 'Decreto sigillato: manufatto antico sotto chiave.';
+  const firstLine = 'Decreto';
+  const secondLine =
+    unlocked ? 'pronto'
+    : failed ? 'fallito'
+    : 'sigillato';
 
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      justifyContent="center"
-      gap={0.85}
+    <Button
       aria-label={decreeDetail}
+      aria-disabled={!unlocked}
       title={decreeDetail}
+      onClick={() => {
+        if (unlocked) {
+          onOpenArtifact();
+        }
+      }}
       sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.85,
         minWidth: 0,
         border: '1px solid rgb(236 199 117 / 18%)',
         borderRadius: 1.5,
         background: 'rgb(0 0 0 / 18%)',
+        color: '#fff7df',
+        cursor: unlocked ? 'pointer' : 'default',
+        fontFamily: 'inherit',
+        textTransform: 'none',
         px: 1,
         py: 0.75,
+        '&:hover': {
+          borderColor: unlocked ? '#e8c56f' : 'rgb(236 199 117 / 18%)',
+          background: unlocked ? 'rgb(232 197 111 / 12%)' : 'rgb(0 0 0 / 18%)',
+        },
       }}
     >
       <Box
@@ -359,12 +477,12 @@ const TopDecreeStatus: React.FC = () => {
           fontWeight={900}
           sx={{ lineHeight: 1.05, textTransform: 'uppercase' }}
         >
-          Decreto
+          {firstLine}
           <br />
-          sigillato
+          {secondLine}
         </Text>
       </Stack>
-    </Stack>
+    </Button>
   );
 };
 
@@ -1720,6 +1838,220 @@ interface DefeatContentProps {
   onReset: () => void;
 }
 
+interface CouncilChronicleModalProps {
+  history: readonly ChoiceResolution[];
+  open: boolean;
+  onClose: () => void;
+}
+
+const CouncilChronicleModal: React.FC<CouncilChronicleModalProps> = ({
+  history,
+  open,
+  onClose,
+}) => {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <Stack
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cronaca dei decreti"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        background: 'rgb(0 0 0 / 76%)',
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      <Stack
+        gap={2}
+        sx={{
+          ...panelSx,
+          width: 'min(760px, 100%)',
+          maxHeight: 'min(680px, 92dvh)',
+          overflow: 'auto',
+          p: { xs: 2, md: 3 },
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" gap={1.5}>
+          <Stack gap={0.25} minWidth={0}>
+            <Text
+              variant="overline"
+              color="#e8c56f"
+              letterSpacing={0}
+              fontWeight={900}
+            >
+              Archivio del Consiglio
+            </Text>
+            <Text variant="h5" fontWeight={900} color="#fff7df">
+              Cronaca dei decreti
+            </Text>
+          </Stack>
+          <Button
+            variant="text"
+            startIcon={<CloseIcon />}
+            onClick={onClose}
+            sx={{
+              color: '#f7e4b1',
+              fontFamily: 'inherit',
+              fontWeight: 900,
+              textTransform: 'none',
+            }}
+          >
+            Chiudi
+          </Button>
+        </Stack>
+
+        <Stack gap={1}>
+          {history.length === 0 ?
+            <Text variant="body2" color="rgb(255 245 218 / 76%)">
+              Nessun decreto registrato.
+            </Text>
+          : history.map((resolution) => {
+              const councillor =
+                councillorProfiles[resolution.event.councillorId];
+
+              return (
+                <Stack
+                  key={resolution.event.id}
+                  direction={{ xs: 'column', sm: 'row' }}
+                  gap={1.25}
+                  sx={{
+                    border: '1px solid rgb(232 197 111 / 22%)',
+                    borderRadius: 1.5,
+                    background: 'rgb(0 0 0 / 22%)',
+                    p: 1.25,
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={councillor.mugshotSrc}
+                    alt=""
+                    sx={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: '50%',
+                      border: '1px solid rgb(232 197 111 / 34%)',
+                      flex: '0 0 auto',
+                    }}
+                  />
+                  <Stack gap={0.35} minWidth={0} textAlign="left">
+                    <Text variant="body2" fontWeight={900} color="#f7e4b1">
+                      {resolution.event.title}
+                    </Text>
+                    <Text variant="body2" color="rgb(255 245 218 / 76%)">
+                      {resolution.choice.result.title}
+                    </Text>
+                    {resolution.earnedSigil != null ?
+                      <Text variant="caption" fontWeight={900} color="#b9e6b9">
+                        Sigillo conquistato
+                      </Text>
+                    : null}
+                  </Stack>
+                </Stack>
+              );
+            })
+          }
+        </Stack>
+      </Stack>
+    </Stack>
+  );
+};
+
+interface EndStateExplanationModalProps {
+  lines: readonly string[];
+  open: boolean;
+  tone: 'victory' | 'defeat';
+  onClose: () => void;
+}
+
+const EndStateExplanationModal: React.FC<EndStateExplanationModalProps> = ({
+  lines,
+  open,
+  tone,
+  onClose,
+}) => {
+  if (!open) {
+    return null;
+  }
+
+  const accentColor = tone === 'victory' ? '#e8c56f' : '#ffb49d';
+
+  return (
+    <Stack
+      role="dialog"
+      aria-modal="true"
+      aria-label="Spiegazione esito"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        background: 'rgb(0 0 0 / 76%)',
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      <Stack
+        gap={2}
+        sx={{
+          ...panelSx,
+          width: 'min(620px, 100%)',
+          p: { xs: 2, md: 3 },
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" gap={1.5}>
+          <Stack gap={0.25} minWidth={0}>
+            <Text
+              variant="overline"
+              color={accentColor}
+              letterSpacing={0}
+              fontWeight={900}
+            >
+              Regole dell&apos;esito
+            </Text>
+            <Text variant="h5" fontWeight={900} color="#fff7df">
+              Perché è successo
+            </Text>
+          </Stack>
+          <Button
+            variant="text"
+            startIcon={<CloseIcon />}
+            onClick={onClose}
+            sx={{
+              color: '#f7e4b1',
+              fontFamily: 'inherit',
+              fontWeight: 900,
+              textTransform: 'none',
+            }}
+          >
+            Chiudi
+          </Button>
+        </Stack>
+
+        <Stack component="ul" gap={1} sx={{ m: 0, pl: 2.4, textAlign: 'left' }}>
+          {lines.map((line) => (
+            <Text
+              key={line}
+              component="li"
+              variant="body2"
+              color="rgb(255 245 218 / 78%)"
+              sx={{ lineHeight: 1.55 }}
+            >
+              {line}
+            </Text>
+          ))}
+        </Stack>
+      </Stack>
+    </Stack>
+  );
+};
+
 interface EndStateArtworkProps {
   artwork: HeroAsset;
   tone: 'victory' | 'defeat';
@@ -1762,6 +2094,9 @@ const DefeatContent: React.FC<DefeatContentProps> = ({
   defeat,
   onReset,
 }) => {
+  const [explanationOpen, setExplanationOpen] = useState(false);
+  const explanationLines = getDefeatExplanationLines(gameState);
+
   return (
     <Stack
       gap={1.75}
@@ -1813,6 +2148,18 @@ const DefeatContent: React.FC<DefeatContentProps> = ({
         Nuova partita
       </Button>
 
+      <Button
+        variant="outlined"
+        size="large"
+        startIcon={<InfoOutlinedIcon />}
+        onClick={() => {
+          setExplanationOpen(true);
+        }}
+        sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
+      >
+        Perché questo esito?
+      </Button>
+
       {gameState.latestResolution != null ?
         <Stack
           gap={1}
@@ -1838,6 +2185,15 @@ const DefeatContent: React.FC<DefeatContentProps> = ({
           <StatDeltaList choice={gameState.latestResolution.choice} />
         </Stack>
       : null}
+
+      <EndStateExplanationModal
+        lines={explanationLines}
+        open={explanationOpen}
+        tone="defeat"
+        onClose={() => {
+          setExplanationOpen(false);
+        }}
+      />
     </Stack>
   );
 };
@@ -1847,6 +2203,10 @@ const EndingContent: React.FC<EndingContentProps> = ({
   ending,
   onOpenArtifact,
 }) => {
+  const [chronicleOpen, setChronicleOpen] = useState(false);
+  const [explanationOpen, setExplanationOpen] = useState(false);
+  const explanationLines = getEndingExplanationLines(gameState);
+
   return (
     <Stack
       gap={1.75}
@@ -1907,66 +2267,205 @@ const EndingContent: React.FC<EndingContentProps> = ({
         Apri il manufatto
       </Button>
 
-      <Stack gap={1.25} sx={{ maxWidth: 780 }}>
-        <Text
-          variant="overline"
-          color="#e8c56f"
-          letterSpacing={0}
-          fontWeight={900}
-        >
-          Cronaca dei decreti
-        </Text>
+      <Button
+        variant="outlined"
+        size="large"
+        startIcon={<InfoOutlinedIcon />}
+        onClick={() => {
+          setChronicleOpen(true);
+        }}
+        sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
+      >
+        Cronaca dei decreti
+      </Button>
+
+      <Button
+        variant="outlined"
+        size="large"
+        startIcon={<InfoOutlinedIcon />}
+        onClick={() => {
+          setExplanationOpen(true);
+        }}
+        sx={{ ...outlineButtonSx, minHeight: 46, px: 2.25 }}
+      >
+        Perché questo esito?
+      </Button>
+
+      <CouncilChronicleModal
+        history={gameState.history}
+        open={chronicleOpen}
+        onClose={() => {
+          setChronicleOpen(false);
+        }}
+      />
+      <EndStateExplanationModal
+        lines={explanationLines}
+        open={explanationOpen}
+        tone="victory"
+        onClose={() => {
+          setExplanationOpen(false);
+        }}
+      />
+    </Stack>
+  );
+};
+
+interface ArtifactSealModalProps {
+  open: boolean;
+  onClose: () => void;
+  onOpenArtifact: () => void;
+}
+
+const ArtifactSealModal: React.FC<ArtifactSealModalProps> = ({
+  open,
+  onClose,
+  onOpenArtifact,
+}) => {
+  const [sealProgress, setSealProgress] = useState(0);
+
+  useEffect(() => {
+    if (!open) {
+      setSealProgress(0);
+    }
+  }, [open]);
+
+  if (!open) {
+    return null;
+  }
+
+  const resetSeal = () => {
+    setSealProgress(0);
+  };
+
+  const handleSealChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextProgress = Number(event.target.value);
+
+    setSealProgress(nextProgress);
+
+    if (nextProgress >= 100) {
+      resetSeal();
+      onOpenArtifact();
+    }
+  };
+
+  const handleSealRelease = () => {
+    if (sealProgress < 100) {
+      resetSeal();
+    }
+  };
+
+  return (
+    <Stack
+      role="dialog"
+      aria-modal="true"
+      aria-label="Sigillo del manufatto"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        background: 'rgb(0 0 0 / 80%)',
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      <Stack
+        gap={2}
+        alignItems="center"
+        textAlign="center"
+        sx={{
+          ...panelSx,
+          width: 'min(620px, 100%)',
+          p: { xs: 2.25, md: 3 },
+        }}
+      >
+        <Stack direction="row" justifyContent="flex-end" sx={{ width: '100%' }}>
+          <Button
+            variant="text"
+            startIcon={<CloseIcon />}
+            onClick={onClose}
+            sx={{
+              color: '#f7e4b1',
+              fontFamily: 'inherit',
+              fontWeight: 900,
+              textTransform: 'none',
+            }}
+          >
+            Chiudi
+          </Button>
+        </Stack>
+        <Stack gap={0.75} alignItems="center">
+          <Text
+            variant="overline"
+            color="#e8c56f"
+            letterSpacing={0}
+            fontWeight={900}
+          >
+            Sigillo reale
+          </Text>
+          <Text variant="h5" fontWeight={900} color="#fff7df">
+            Il manufatto attende
+          </Text>
+          <Text
+            variant="body2"
+            color="rgb(255 245 218 / 76%)"
+            sx={{ maxWidth: 440, lineHeight: 1.55 }}
+          >
+            Il decreto cede solo a un gesto completo della Regina.
+          </Text>
+        </Stack>
+
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-            gap: 1,
+            width: 'min(460px, 100%)',
+            border: '1px solid rgb(232 197 111 / 30%)',
+            borderRadius: 99,
+            background: 'rgb(0 0 0 / 28%)',
+            p: 0.75,
           }}
         >
-          {gameState.history.map((resolution) => {
-            const councillor =
-              councillorProfiles[resolution.event.councillorId];
-
-            return (
-              <Stack
-                key={resolution.event.id}
-                direction="row"
-                gap={1}
-                sx={{
-                  border: '1px solid rgb(232 197 111 / 22%)',
-                  borderRadius: 1.5,
-                  background: 'rgb(0 0 0 / 20%)',
-                  p: 1,
-                }}
-              >
-                <Box
-                  component="img"
-                  src={councillor.mugshotSrc}
-                  alt=""
-                  sx={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: '50%',
-                    border: '1px solid rgb(232 197 111 / 34%)',
-                    flex: '0 0 auto',
-                  }}
-                />
-                <Stack gap={0.25} minWidth={0}>
-                  <Text variant="caption" fontWeight={900} color="#f7e4b1">
-                    {resolution.event.title}
-                  </Text>
-                  <Text variant="body2" color="rgb(255 245 218 / 74%)">
-                    {resolution.choice.result.title}
-                  </Text>
-                  {resolution.earnedSigil != null ?
-                    <Text variant="caption" fontWeight={900} color="#b9e6b9">
-                      Sigillo conquistato
-                    </Text>
-                  : null}
-                </Stack>
-              </Stack>
-            );
-          })}
+          <Box
+            component="input"
+            type="range"
+            min={0}
+            max={100}
+            value={sealProgress}
+            aria-label="Apri il sigillo reale"
+            onChange={handleSealChange}
+            onPointerUp={handleSealRelease}
+            onKeyUp={handleSealRelease}
+            sx={{
+              display: 'block',
+              width: '100%',
+              height: 46,
+              m: 0,
+              appearance: 'none',
+              background: `linear-gradient(90deg, rgb(232 197 111 / 54%) ${sealProgress}%, rgb(255 255 255 / 10%) ${sealProgress}%)`,
+              borderRadius: 99,
+              cursor: 'grab',
+              outline: 'none',
+              '&:active': { cursor: 'grabbing' },
+              '&::-webkit-slider-thumb': {
+                appearance: 'none',
+                width: 58,
+                height: 58,
+                border: '2px solid rgb(247 228 177 / 72%)',
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(circle, #f7e4b1 0%, #b77735 48%, #5b2c17 100%)',
+                boxShadow: '0 8px 24px rgb(0 0 0 / 38%)',
+              },
+              '&::-moz-range-thumb': {
+                width: 58,
+                height: 58,
+                border: '2px solid rgb(247 228 177 / 72%)',
+                borderRadius: '50%',
+                background:
+                  'radial-gradient(circle, #f7e4b1 0%, #b77735 48%, #5b2c17 100%)',
+                boxShadow: '0 8px 24px rgb(0 0 0 / 38%)',
+              },
+            }}
+          />
         </Box>
       </Stack>
     </Stack>
@@ -2123,6 +2622,7 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
 
 const StrategyGameHome: React.FC = () => {
   const [artifactOpen, setArtifactOpen] = useState(false);
+  const [artifactSealOpen, setArtifactSealOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [pendingChoice, setPendingChoice] = useState<CouncilChoice>();
   const [profileModalCouncillorId, setProfileModalCouncillorId] =
@@ -2176,6 +2676,7 @@ const StrategyGameHome: React.FC = () => {
 
   const handleNewGame = () => {
     setArtifactOpen(false);
+    setArtifactSealOpen(false);
     setCalendarOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
@@ -2194,6 +2695,7 @@ const StrategyGameHome: React.FC = () => {
       'lauretana';
 
     setArtifactOpen(false);
+    setArtifactSealOpen(false);
     setCalendarOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
@@ -2212,6 +2714,7 @@ const StrategyGameHome: React.FC = () => {
 
   const handleResetCouncil = () => {
     setArtifactOpen(false);
+    setArtifactSealOpen(false);
     setCalendarOpen(false);
     setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
@@ -2304,7 +2807,12 @@ const StrategyGameHome: React.FC = () => {
             onToggleMusic={toggleMusic}
             onVolumeChange={setMusicVolume}
           />
-          <TopDecreeStatus />
+          <TopDecreeStatus
+            phase={gameState.phase}
+            onOpenArtifact={() => {
+              setArtifactSealOpen(true);
+            }}
+          />
           <StatSummaryStrip stats={statCards} />
         </Stack>
 
@@ -2355,7 +2863,7 @@ const StrategyGameHome: React.FC = () => {
                 onStart={handleStartCouncil}
                 onContinue={handleContinueCouncil}
                 onOpenArtifact={() => {
-                  setArtifactOpen(true);
+                  setArtifactSealOpen(true);
                 }}
                 onReset={handleResetCouncil}
                 onSelectChoice={handleSelectChoice}
@@ -2481,6 +2989,16 @@ const StrategyGameHome: React.FC = () => {
         open={artifactOpen}
         onClose={() => {
           setArtifactOpen(false);
+        }}
+      />
+      <ArtifactSealModal
+        open={artifactSealOpen}
+        onClose={() => {
+          setArtifactSealOpen(false);
+        }}
+        onOpenArtifact={() => {
+          setArtifactSealOpen(false);
+          setArtifactOpen(true);
         }}
       />
     </Stack>

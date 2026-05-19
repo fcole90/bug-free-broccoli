@@ -91,12 +91,21 @@ export const useBackgroundMusic = ({
 
   useEffect(() => {
     const audioElement = new Audio(src);
+    const handleEnded = () => {
+      audioElement.currentTime = 0;
+      void audioElement.play().catch(() => {
+        setMusicEnabled(false);
+      });
+    };
+
     audioElement.loop = true;
     audioElement.preload = 'auto';
     audioElement.volume = defaultVolume / 8;
+    audioElement.addEventListener('ended', handleEnded);
     audioElementRef.current = audioElement;
 
     return () => {
+      audioElement.removeEventListener('ended', handleEnded);
       audioElement.pause();
       audioElementRef.current = null;
     };

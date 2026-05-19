@@ -67,7 +67,7 @@ export const heroAssets: Record<
     alt: 'Icona calendario del genetliaco',
   },
   minimap: {
-    src: publicAsset('/minimap-scania.png'),
+    src: publicAsset('/minimap-scania-800x600.png'),
     alt: 'Mappa stilizzata di Scania',
   },
 };
@@ -350,13 +350,13 @@ export const councilEvents: CouncilEvent[] = [
       {
         id: 'disciplined-campaign',
         label: 'Approva il piano, ma vieta assedi al buffet.',
-        preview: '-Stress, +Armonia',
-        statDeltas: { stress: -1, harmony: 1 },
+        preview: '-Stress, +Armonia, +Sospetto',
+        statDeltas: { stress: -1, harmony: 1, suspicion: 1 },
         awardsSigil: true,
         result: {
           title: 'Fronte sotto controllo',
           description:
-            'Il Maresciallo accetta la disciplina. Per la prima volta, la linea del fronte coincide con il buon senso.',
+            'Il Maresciallo accetta la disciplina. La linea del fronte coincide con il buon senso, anche se la corte nota troppa precisione militare.',
         },
       },
       {
@@ -396,13 +396,13 @@ export const councilEvents: CouncilEvent[] = [
       {
         id: 'shared-legend',
         label: 'Fai aggiungere a ciascuno un verso alla leggenda.',
-        preview: '+Armonia, -Stress',
-        statDeltas: { harmony: 1, stress: -1 },
+        preview: '+Armonia, -Stress, +Sospetto',
+        statDeltas: { harmony: 1, stress: -1, suspicion: 1 },
         awardsSigil: true,
         result: {
           title: 'Mito collettivo',
           description:
-            'La storia diventa collettiva, caotica e molto vostra. Roberta prende nota come se stesse salvando il patrimonio culturale.',
+            'La storia diventa collettiva, caotica e molto vostra. Roberta salva il patrimonio culturale, mentre qualcuno si chiede perché serva tanta regia.',
         },
       },
       {
@@ -442,13 +442,13 @@ export const councilEvents: CouncilEvent[] = [
       {
         id: 'peer-review',
         label: '[Erudita] Pretendi una revisione tra pari.',
-        preview: '-Stress, -Sospetto',
-        statDeltas: { stress: -1, suspicion: -1 },
+        preview: '+Stress, -Sospetto',
+        statDeltas: { stress: 1, suspicion: -1 },
         awardsSigil: true,
         result: {
           title: 'Eresia verificata',
           description:
-            "L'eresia funziona. Tra formule e sigilli emerge una verità quasi pronta, ma ancora abbastanza nascosta.",
+            "L'eresia funziona. Il metodo placa le voci, ma le formule finali fanno sudare anche chi finge di capirle.",
         },
       },
       {
