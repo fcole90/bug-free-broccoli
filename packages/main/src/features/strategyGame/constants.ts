@@ -29,6 +29,8 @@ export const initialGameStats: GameStats = {
   suspicion: 2,
 };
 
+export const councilGameStorageKey = 'genetliaco:council-game-state:v1';
+
 export const gameTitle = 'Il Consiglio del Genetliaco';
 
 export const gameSubtitle =
