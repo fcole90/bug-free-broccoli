@@ -11,6 +11,7 @@ import type {
   CouncilChoice,
   CouncilGameState,
   CouncillorId,
+  DefeatReason,
   EndingTier,
   GamePhase,
   GameStats,
@@ -26,21 +27,36 @@ interface PersistedChoiceResolution {
 }
 
 interface PersistedCouncilGameState {
-  version: 2;
+  version: 3;
   phase: GamePhase;
   stats: GameStats;
   earnedSigils: CouncillorId[];
   history: PersistedChoiceResolution[];
   currentEventIndex: number;
   endingTier?: EndingTier;
+  defeatReason?: DefeatReason;
 }
 
-const persistedStateVersion = 2;
-const gamePhases: readonly GamePhase[] = ['intro', 'event', 'result', 'ending'];
+const persistedStateVersion = 3;
+const gamePhases: readonly GamePhase[] = [
+  'intro',
+  'event',
+  'result',
+  'ending',
+  'defeat',
+];
 const endingTiers: readonly EndingTier[] = [
   'dynastic-triumph',
+  'golden-prosperity',
+  'courtly-legend',
   'noble-chaos',
   'last-resort',
+];
+const defeatReasons: readonly DefeatReason[] = [
+  'stress-meltdown',
+  'suspicion-exposed',
+  'treasury-empty',
+  'harmony-broken',
 ];
 
 const createInitialGameState = (): CouncilGameState => ({
@@ -92,6 +108,7 @@ const createChoiceResolution = (
   choice: CouncilChoice,
   previousStats: GameStats,
   nextStats: GameStats,
+  defeatReason?: DefeatReason,
 ): ChoiceResolution => {
   const event = councilEvents[eventIndex];
   const earnedSigil = choice.awardsSigil ? event.councillorId : undefined;
@@ -102,7 +119,31 @@ const createChoiceResolution = (
     previousStats,
     nextStats,
     earnedSigil,
+    defeatReason,
   };
+};
+
+const detectDefeatReason = (
+  stats: GameStats,
+  choice: CouncilChoice,
+): DefeatReason | undefined => {
+  if (stats.stress + (choice.statDeltas.stress ?? 0) > 3) {
+    return 'stress-meltdown';
+  }
+
+  if (stats.suspicion + (choice.statDeltas.suspicion ?? 0) > 3) {
+    return 'suspicion-exposed';
+  }
+
+  if (stats.gold + (choice.statDeltas.gold ?? 0) < 1) {
+    return 'treasury-empty';
+  }
+
+  if (stats.harmony + (choice.statDeltas.harmony ?? 0) < 1) {
+    return 'harmony-broken';
+  }
+
+  return undefined;
 };
 
 const countWorstStats = (stats: GameStats) => {
@@ -128,6 +169,14 @@ const calculateEndingTier = (
     return 'dynastic-triumph';
   }
 
+  if (stats.gold === 3 && stats.suspicion !== 3) {
+    return 'golden-prosperity';
+  }
+
+  if (stats.harmony === 3) {
+    return 'courtly-legend';
+  }
+
   return 'noble-chaos';
 };
 
@@ -142,6 +191,9 @@ const isGamePhase = (value: unknown): value is GamePhase =>
 
 const isEndingTier = (value: unknown): value is EndingTier =>
   typeof value === 'string' && endingTiers.includes(value as EndingTier);
+
+const isDefeatReason = (value: unknown): value is DefeatReason =>
+  typeof value === 'string' && defeatReasons.includes(value as DefeatReason);
 
 const isCouncillorId = (value: unknown): value is CouncillorId => {
   const councillorIds: readonly string[] = councillorOrder;
@@ -285,6 +337,8 @@ const parsePersistedGameState = (
     isEndingTier(value.endingTier) ?
       value.endingTier
     : calculateEndingTier(stats, earnedSigils);
+  const defeatReason =
+    isDefeatReason(value.defeatReason) ? value.defeatReason : undefined;
 
   if (phase === 'ending') {
     return {
@@ -294,6 +348,27 @@ const parsePersistedGameState = (
       history,
       currentEventIndex,
       endingTier,
+    };
+  }
+
+  if (phase === 'defeat') {
+    if (defeatReason == null) {
+      return undefined;
+    }
+
+    const latestResolution = history.findLast(
+      (resolution) =>
+        resolution.event.id === councilEvents[currentEventIndex].id,
+    );
+
+    return {
+      phase,
+      stats,
+      earnedSigils,
+      history,
+      currentEventIndex,
+      latestResolution,
+      defeatReason,
     };
   }
 
@@ -350,6 +425,10 @@ const serializeGameState = (
 
   if (gameState.endingTier != null) {
     persistedState.endingTier = gameState.endingTier;
+  }
+
+  if (gameState.defeatReason != null) {
+    persistedState.defeatReason = gameState.defeatReason;
   }
 
   return persistedState;
@@ -485,23 +564,39 @@ export const useCouncilGame = () => {
 
   const selectChoice = useCallback((choice: CouncilChoice) => {
     setGameState((previousState) => {
+      const defeatReason = detectDefeatReason(previousState.stats, choice);
       const nextStats = applyChoiceToStats(previousState.stats, choice);
       const resolution = createChoiceResolution(
         previousState.currentEventIndex,
         choice,
         previousState.stats,
         nextStats,
+        defeatReason,
       );
+      const nextEarnedSigils = addEarnedSigil(
+        previousState.earnedSigils,
+        resolution.earnedSigil,
+      );
+      const nextHistory = [...previousState.history, resolution];
+
+      if (defeatReason != null) {
+        return {
+          ...previousState,
+          phase: 'defeat',
+          stats: nextStats,
+          earnedSigils: nextEarnedSigils,
+          history: nextHistory,
+          latestResolution: resolution,
+          defeatReason,
+        };
+      }
 
       return {
         ...previousState,
         phase: 'result',
         stats: nextStats,
-        earnedSigils: addEarnedSigil(
-          previousState.earnedSigils,
-          resolution.earnedSigil,
-        ),
-        history: [...previousState.history, resolution],
+        earnedSigils: nextEarnedSigils,
+        history: nextHistory,
         latestResolution: resolution,
       };
     });

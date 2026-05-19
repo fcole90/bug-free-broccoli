@@ -3,6 +3,8 @@ import type {
   CouncilEvent,
   CouncillorId,
   CouncillorProfile,
+  DefeatDefinition,
+  DefeatReason,
   EndingDefinition,
   EndingTier,
   GameStats,
@@ -32,7 +34,7 @@ export const initialGameStats: GameStats = {
   suspicion: 2,
 };
 
-export const councilGameStorageKey = 'genetliaco:council-game-state:v2';
+export const councilGameStorageKey = 'genetliaco:council-game-state:v3';
 
 export const gameTitle = 'Il Consiglio del Genetliaco';
 
@@ -134,7 +136,11 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     traits: ['Frugale', 'Diligente', 'Testarda'],
     motto: 'Ogni moneta ha una fonte. Ogni fonte ha una nota a pie pagina.',
     detail:
-      'Lauretana considera ogni spreco un piccolo tradimento feudale. Pretende ricevute, fonti e sigilli con la stessa calma con cui altri chiedono acqua. Se una spesa non torna, la trova prima del cameriere.',
+      'Lauretana considera ogni spreco un piccolo tradimento feudale. Pretende ricevute, fonti e sigilli con la stessa calma con cui altri chiedono acqua. Dietro la severità c’è una forma bizzarra di affetto: se il piano è ben rendicontato, lei proteggerà la sorpresa come una reliquia fiscale.',
+    approach:
+      'Ama i decreti sobri, verificabili e coperti da registri. Le scelte che abbassano il Sospetto spesso le sembrano sagge anche quando costano Oro.',
+    warning:
+      'Le voci opache la fanno irrigidire. Se le casse sono già fragili, un’altra spesa può mandare il Tesoro in rovina.',
     fullSrc: publicAsset('/character-full-lauretana-200-560.png'),
     fullAlt: 'Lauretana da Grosseto, amministratrice del Consiglio',
     mugshotSrc: publicAsset('/character-mugshot-lauretana-96.png'),
@@ -152,7 +158,11 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     traits: ['Impaziente', 'Ambizioso', 'Avventuriero'],
     motto: 'Nessuno entra in locanda senza lasciare almeno un gancio.',
     detail:
-      'Giommaria vede ogni locanda come un ufficio informazioni con vino incluso. La sua rete arriva ovunque, ma ogni incarico rischia di diventare una spedizione corsara con ricevuta impossibile.',
+      'Giommaria vede ogni locanda come un ufficio informazioni con vino incluso. Sa muovere corrieri, voci e favori con velocità inquietante, ma considera la parola prudenza un consiglio opzionale dato da persone poco avventurose.',
+    approach:
+      'È perfetto quando serve ridurre il Sospetto o far passare qualcosa sotto il naso della corte. Tenere il sigillo reale nelle tue mani evita che apra una seconda agenda.',
+    warning:
+      'Troppa libertà agli informatori crea brindisi, canzoni e indizi. Se il Sospetto è già alto, un altro passo falso espone tutto.',
     fullSrc: publicAsset('/character-full-giommaria-200-560.png'),
     fullAlt: 'Giommaria il Locandiere, maestro di spie',
     mugshotSrc: publicAsset('/character-mugshot-giommaria-96.png'),
@@ -165,7 +175,11 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     traits: ['Brillante Stratega', 'Coraggioso', 'Astuto'],
     motto: 'Il morale e il vantaggio decidono ogni campagna.',
     detail:
-      'Alessandro pianifica anche una merenda come se fosse una campagna militare. Le sedie diventano fortezze, il dolce un obiettivo, e il morale una risorsa sacra.',
+      'Alessandro pianifica anche una merenda come se fosse una campagna militare. Le sedie diventano fortezze, il dolce un obiettivo, e il morale una risorsa sacra. Il bello è che spesso funziona, purché qualcuno gli ricordi che il buffet non è una provincia ribelle.',
+    approach:
+      'Quando lo Stress sale, Alessandro può trasformare il caos in disciplina. Le sue scelte migliori tengono alto il morale senza militarizzare ogni tovagliolo.',
+    warning:
+      'Le cariche preventive sembrano divertenti finché la sala non diventa una guerra vera. Se lo Stress è già al massimo, un’altra escalation fa collassare la corte.',
     fullSrc: publicAsset('/character-full-alessandro-200-560.png'),
     fullAlt: 'Alessandro di Monza, maresciallo del Consiglio',
     mugshotSrc: publicAsset('/character-mugshot-alessandro-96.png'),
@@ -179,7 +193,11 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     motto:
       'Un regno resta in piedi se qualcuno ricorda di invitare tutti al banchetto.',
     detail:
-      'Roberta salva la diplomazia con inviti, miti e una memoria di corte pericolosamente precisa. Dove altri vedono protocollo, lei vede persone che vogliono sentirsi incluse.',
+      'Roberta salva la diplomazia con inviti, miti e una memoria di corte pericolosamente precisa. Dove altri vedono protocollo, lei vede persone che vogliono sentirsi incluse. Riesce a far sembrare una lista posti un trattato di pace, e questo è un talento raro.',
+    approach:
+      'È la voce da ascoltare quando l’Armonia scricchiola. Le opzioni calde e inclusive proteggono il gruppo e rendono più credibile ogni copertura.',
+    warning:
+      'Dimenticare qualcuno o trattare gli inviti come dettagli minori rompe l’atmosfera. Se l’Armonia è già bassa, un’altra esclusione rovina la festa.',
     fullSrc: publicAsset('/character-full-roberta-200-560.png'),
     fullAlt: 'Donna Roberta di Modena, cancelliera del Consiglio',
     mugshotSrc: publicAsset('/character-mugshot-roberta-96.png'),
@@ -192,7 +210,11 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     traits: ['Erudito', 'Eccentrico', 'Cinico'],
     motto: 'Mostratemi il miracolo, poi controllerò il metodo sperimentale.',
     detail:
-      'Phabous accetta il sacro con riserva metodologica. Porta calcoli, alambicchi e una certezza fastidiosa: senza prova empirica, anche un miracolo resta una bozza.',
+      'Phabous accetta il sacro con riserva metodologica. Porta calcoli, alambicchi e una certezza fastidiosa: senza prova empirica, anche un miracolo resta una bozza. È il consigliere che può salvare un piano assurdo dimostrando che è solo moderatamente impossibile.',
+    approach:
+      'È il jolly finale: può calmare Stress e Sospetto se gli si concede una verifica seria. La sua eresia funziona meglio quando è documentata.',
+    warning:
+      'Liquidare il metodo o gridare al miracolo troppo presto produce pergamene, domande e occhi puntati. Con Sospetto alto, il laboratorio diventa una trappola.',
     fullSrc: publicAsset('/character-full-phabous-200-560.png'),
     fullAlt: 'Phabous Koleman, sacerdote eretico del Consiglio',
     mugshotSrc: publicAsset('/character-mugshot-phabous-96.png'),
@@ -462,20 +484,65 @@ export const endingDefinitions: Record<EndingTier, EndingDefinition> = {
     tier: 'dynastic-triumph',
     title: 'Trionfo Dinastico',
     text: 'Il Consiglio trattiene il respiro. I sigilli sono allineati, il reame è stabile, e perfino Lauretana non trova una nota spese fuori posto.',
-    revealLine: 'Hai vinto Crusader Kings III: il bundle reale ti attende!',
+    revealLine:
+      'Il manufatto reale è pronto. Resta solo aprirlo senza tremare.',
+  },
+  'golden-prosperity': {
+    tier: 'golden-prosperity',
+    title: 'Prosperità Dorata',
+    text: 'Le casse tintinnano, i registri sorridono e la corte scopre che perfino un piano segreto può avere un margine di bilancio rispettabile.',
+    revealLine:
+      'Il manufatto riposa in una custodia degna di un tesoro di corte.',
+  },
+  'courtly-legend': {
+    tier: 'courtly-legend',
+    title: 'Leggenda di Corte',
+    text: 'Inviti, miti e sorrisi si allineano in una storia che tutti vogliono raccontare. La sorpresa arriva come se fosse sempre stata parte della tradizione.',
+    revealLine:
+      'Il manufatto attende il rito finale, circondato da un consenso quasi sospetto.',
   },
   'noble-chaos': {
     tier: 'noble-chaos',
     title: 'Un Nobile Caos',
-    text: 'Qualche indizio è trapelato, un piano è quasi esploso, ma la corte è ancora in piedi. Il Consiglio decide che questo, in fondo, è pienamente in stile CK3.',
-    revealLine:
-      'Sorpresa: il misterioso artefatto è il bundle di Crusader Kings III!',
+    text: 'Qualche indizio è trapelato e un piano è quasi esploso, ma la corte è ancora in piedi. Il Consiglio decide che questo, in fondo, è pienamente medievale.',
+    revealLine: 'Il manufatto è salvo. Probabilmente. Aprirlo chiarirà tutto.',
   },
   'last-resort': {
     tier: 'last-resort',
     title: "L'Ultima Spiaggia",
-    text: 'La finzione medievale collassa sotto il peso dei decreti. Il Consiglio rompe il personaggio, chiede perdono per il roleplay troppo elaborato e consegna direttamente il dono.',
-    revealLine: 'Buon compleanno, Regina Georgia: il CK3 bundle è tuo.',
+    text: 'La finzione medievale scricchiola sotto il peso dei decreti, ma non cede. Il Consiglio decide che la dignità può attendere: il manufatto deve arrivare.',
+    revealLine: 'La custodia è ammaccata, ma ancora chiusa. È il momento.',
+  },
+};
+
+export const defeatDefinitions: Record<DefeatReason, DefeatDefinition> = {
+  'stress-meltdown': {
+    reason: 'stress-meltdown',
+    title: 'Crollo da Stress',
+    text: 'Un altro decreto militante, contabile o cerimoniale supera la pazienza della sala. La corte si scioglie in sospiri, sedie spostate e accuse al protocollo.',
+    imagePrompt:
+      'Immagine futura: la Regina davanti a un tavolo di consiglio rovesciato, candele spente e pergamene sparse come dopo una piccola crisi dinastica.',
+  },
+  'suspicion-exposed': {
+    reason: 'suspicion-exposed',
+    title: 'Sorpresa Scoperta',
+    text: 'Il Sospetto diventa troppo alto. Qualcuno collega corrieri, ricevute e locande con una sicurezza offensiva. Il Consiglio deve annullare la messinscena.',
+    imagePrompt:
+      'Immagine futura: un corridoio di corte con nobili che bisbigliano dietro ventagli, mentre un sigillo rotto rivela che il segreto è sfuggito.',
+  },
+  'treasury-empty': {
+    reason: 'treasury-empty',
+    title: 'Tesoro Prosciugato',
+    text: 'Le casse non reggono un’altra spesa. Lauretana chiude il registro con una calma terribile e dichiara sospeso ogni decreto non essenziale.',
+    imagePrompt:
+      'Immagine futura: uno scrigno vuoto illuminato da una candela, con Lauretana che tiene una ricevuta lunga quanto una scomunica.',
+  },
+  'harmony-broken': {
+    reason: 'harmony-broken',
+    title: 'Corte in Frantumi',
+    text: 'Un altro sgarbo diplomatico rompe l’Armonia. Gli invitati si dividono in fazioni minuscole e Roberta sorride nel modo che precede le peggiori riunioni.',
+    imagePrompt:
+      'Immagine futura: un banchetto diviso in tavoli rivali, coppe intatte e una sedia vuota al centro della sala.',
   },
 };
 

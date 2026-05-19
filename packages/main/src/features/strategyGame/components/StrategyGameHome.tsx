@@ -7,7 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import Box from '@swiftpost/elysium/ui/base/Box';
 import Button from '@swiftpost/elysium/ui/base/Button';
 import Stack from '@swiftpost/elysium/ui/base/Stack';
@@ -17,6 +17,7 @@ import {
   councilSealPreviews,
   councillorProfiles,
   createStatPreviews,
+  defeatDefinitions,
   endingDefinitions,
   gameSubtitle,
   gameTitle,
@@ -34,7 +35,9 @@ import type {
   CouncilSealPreview,
   CouncillorId,
   CouncillorProfile,
+  DefeatDefinition,
   EndingDefinition,
+  StatKey,
   StatPreview,
   StatTone,
 } from '../types';
@@ -76,6 +79,50 @@ const panelSx = {
   background:
     'linear-gradient(180deg, rgb(30 24 22 / 88%), rgb(18 15 16 / 90%))',
   boxShadow: '0 24px 80px rgb(0 0 0 / 34%)',
+};
+
+const actionButtonSx = {
+  minHeight: 54,
+  border: '1px solid rgb(247 228 177 / 36%)',
+  borderRadius: 1.5,
+  background:
+    'linear-gradient(180deg, rgb(112 72 37 / 96%), rgb(78 43 24 / 96%))',
+  boxShadow: '0 12px 32px rgb(0 0 0 / 24%)',
+  color: '#fff3cf',
+  fontFamily: 'inherit',
+  fontWeight: 900,
+  textTransform: 'none',
+  '&:hover': {
+    borderColor: '#f7d77f',
+    background:
+      'linear-gradient(180deg, rgb(132 84 42 / 98%), rgb(89 49 26 / 98%))',
+  },
+};
+
+const outlineButtonSx = {
+  borderColor: 'rgb(232 197 111 / 40%)',
+  borderRadius: 1.5,
+  color: '#fff7df',
+  fontFamily: 'inherit',
+  fontWeight: 900,
+  textTransform: 'none',
+};
+
+const criticalStatWarnings: Record<StatKey, string> = {
+  stress:
+    'Siete sul ciglio del crollo mentale: un altro +Stress fa perdere la partita.',
+  gold: 'Il Tesoro è quasi vuoto: un altro -Oro porta alla bancarotta.',
+  harmony:
+    'La corte è sul punto di spezzarsi: un altro -Armonia rovina la festa.',
+  suspicion: 'Il Sospetto è al massimo: un altro +Sospetto scopre il segreto.',
+};
+
+const getCriticalStatWarning = (stat: StatPreview) => {
+  if (stat.key === 'stress' || stat.key === 'suspicion') {
+    return stat.value === 3 ? criticalStatWarnings[stat.key] : undefined;
+  }
+
+  return stat.value === 1 ? criticalStatWarnings[stat.key] : undefined;
 };
 
 interface MusicControlsProps {
@@ -164,6 +211,7 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ stat }) => {
   const toneStyle = statToneStyles[stat.tone];
+  const criticalWarning = getCriticalStatWarning(stat);
 
   return (
     <Stack
@@ -220,6 +268,20 @@ const StatCard: React.FC<StatCardProps> = ({ stat }) => {
           );
         })}
       </Stack>
+      {criticalWarning != null ?
+        <Text
+          variant="caption"
+          color="#fff3cf"
+          sx={{
+            borderTop: `1px solid ${toneStyle.border}`,
+            lineHeight: 1.35,
+            mt: 0.25,
+            pt: 0.75,
+          }}
+        >
+          {criticalWarning}
+        </Text>
+      : null}
     </Stack>
   );
 };
@@ -310,11 +372,13 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({
 interface CouncillorInfoPanelProps {
   councillor: CouncillorProfile;
   inAudience: boolean;
+  onOpenDetails: (councillorId: CouncillorId) => void;
 }
 
 const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
   councillor,
   inAudience,
+  onOpenDetails,
 }) => {
   return (
     <Stack
@@ -371,11 +435,28 @@ const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
       >
         {councillor.detail}
       </Text>
+      <Text
+        variant="body2"
+        color="rgb(255 245 218 / 72%)"
+        sx={{ lineHeight: 1.5 }}
+      >
+        {councillor.approach}
+      </Text>
       {inAudience ?
         <Text variant="caption" fontWeight={900} color="#b9e6b9">
           In udienza adesso
         </Text>
       : null}
+      <Button
+        variant="outlined"
+        startIcon={<InfoOutlinedIcon />}
+        onClick={() => {
+          onOpenDetails(councillor.id);
+        }}
+        sx={{ ...outlineButtonSx, alignSelf: 'flex-start' }}
+      >
+        Apri scheda completa
+      </Button>
     </Stack>
   );
 };
@@ -403,6 +484,162 @@ const TraitChips: React.FC<TraitChipsProps> = ({ traits }) => {
           {trait}
         </Text>
       ))}
+    </Stack>
+  );
+};
+
+interface CouncillorProfileModalProps {
+  councillor?: CouncillorProfile;
+  onClose: () => void;
+}
+
+const CouncillorProfileModal: React.FC<CouncillorProfileModalProps> = ({
+  councillor,
+  onClose,
+}) => {
+  if (councillor == null) {
+    return null;
+  }
+
+  return (
+    <Stack
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Scheda completa di ${councillor.name}`}
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        background: 'rgb(0 0 0 / 78%)',
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      <Stack
+        gap={2}
+        sx={{
+          ...panelSx,
+          width: 'min(720px, 100%)',
+          maxHeight: 'min(760px, 92dvh)',
+          overflow: 'auto',
+          p: { xs: 2, md: 3 },
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" gap={1.5}>
+          <Stack direction="row" alignItems="center" gap={1.25} minWidth={0}>
+            <Box
+              component="img"
+              src={councillor.mugshotSrc}
+              alt=""
+              sx={{
+                width: 58,
+                height: 58,
+                borderRadius: '50%',
+                border: '1px solid rgb(232 197 111 / 44%)',
+                flex: '0 0 auto',
+              }}
+            />
+            <Stack gap={0.25} minWidth={0}>
+              <Text
+                variant="overline"
+                color="#e8c56f"
+                letterSpacing={0}
+                fontWeight={900}
+              >
+                Scheda completa
+              </Text>
+              <Text variant="h5" fontWeight={900} color="#fff7df">
+                {councillor.name}
+              </Text>
+              <Text variant="body2" color="rgb(255 242 207 / 72%)">
+                {councillor.role}
+              </Text>
+            </Stack>
+          </Stack>
+          <Button
+            variant="text"
+            startIcon={<CloseIcon />}
+            onClick={onClose}
+            sx={{
+              color: '#f7e4b1',
+              fontFamily: 'inherit',
+              fontWeight: 900,
+              textTransform: 'none',
+            }}
+          >
+            Chiudi
+          </Button>
+        </Stack>
+
+        <TraitChips traits={councillor.traits} />
+        <Text
+          variant="body1"
+          color="#f7e4b1"
+          sx={{ fontStyle: 'italic', lineHeight: 1.55 }}
+        >
+          {`"${councillor.motto}"`}
+        </Text>
+        <Text
+          variant="body1"
+          color="rgb(255 245 218 / 82%)"
+          sx={{ lineHeight: 1.6 }}
+        >
+          {councillor.detail}
+        </Text>
+        <Stack gap={1.25}>
+          <Stack
+            gap={0.5}
+            sx={{
+              border: '1px solid rgb(232 197 111 / 24%)',
+              borderRadius: 1.5,
+              background: 'rgb(0 0 0 / 18%)',
+              p: 1.5,
+            }}
+          >
+            <Text
+              variant="overline"
+              color="#e8c56f"
+              letterSpacing={0}
+              fontWeight={900}
+            >
+              Come leggerlo
+            </Text>
+            <Text
+              variant="body2"
+              color="rgb(255 245 218 / 78%)"
+              sx={{ lineHeight: 1.55 }}
+            >
+              {councillor.approach}
+            </Text>
+          </Stack>
+          <Stack
+            gap={0.5}
+            sx={{
+              border: '1px solid rgb(229 100 75 / 28%)',
+              borderRadius: 1.5,
+              background: 'rgb(74 28 24 / 22%)',
+              p: 1.5,
+            }}
+          >
+            <Text
+              variant="overline"
+              color="#ffb49d"
+              letterSpacing={0}
+              fontWeight={900}
+            >
+              Rischio
+            </Text>
+            <Text
+              variant="body2"
+              color="rgb(255 245 218 / 78%)"
+              sx={{ lineHeight: 1.55 }}
+            >
+              {councillor.warning}
+            </Text>
+          </Stack>
+        </Stack>
+      </Stack>
     </Stack>
   );
 };
@@ -698,6 +935,52 @@ const IntroContent: React.FC<IntroContentProps> = ({ onStart }) => {
         ))}
       </Stack>
 
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
+          gap: 1,
+          maxWidth: 760,
+        }}
+      >
+        {[
+          {
+            title: 'Obiettivo',
+            text: 'Portate il manufatto al sigillo finale senza far saltare il piano.',
+          },
+          {
+            title: 'Regole',
+            text: 'Ogni stat ha tre livelli. Spingere un valore già critico oltre il limite fa perdere la partita.',
+          },
+          {
+            title: 'Consiglio',
+            text: 'Leggete le schede: ogni consigliere suggerisce cosa sa fare e quale rischio nasconde.',
+          },
+        ].map((item) => (
+          <Stack
+            key={item.title}
+            gap={0.5}
+            sx={{
+              border: '1px solid rgb(232 197 111 / 24%)',
+              borderRadius: 1.5,
+              background: 'rgb(0 0 0 / 18%)',
+              p: 1.25,
+            }}
+          >
+            <Text variant="caption" fontWeight={900} color="#e8c56f">
+              {item.title}
+            </Text>
+            <Text
+              variant="body2"
+              color="rgb(255 245 218 / 76%)"
+              sx={{ lineHeight: 1.45 }}
+            >
+              {item.text}
+            </Text>
+          </Stack>
+        ))}
+      </Box>
+
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         gap={1.25}
@@ -710,10 +993,7 @@ const IntroContent: React.FC<IntroContentProps> = ({ onStart }) => {
           startIcon={<PlayArrowIcon />}
           onClick={onStart}
           sx={{
-            minHeight: 54,
-            borderRadius: 1.5,
-            fontFamily: 'inherit',
-            fontWeight: 900,
+            ...actionButtonSx,
             px: 3,
           }}
         >
@@ -730,16 +1010,14 @@ const IntroContent: React.FC<IntroContentProps> = ({ onStart }) => {
 interface EventContentProps {
   event: CouncilEvent;
   councillor: CouncillorProfile;
-  detailsVisible: boolean;
-  onToggleDetails: () => void;
+  onOpenCouncillorDetail: (councillorId: CouncillorId) => void;
   onSelectChoice: (choice: CouncilChoice) => void;
 }
 
 const EventContent: React.FC<EventContentProps> = ({
   event,
   councillor,
-  detailsVisible,
-  onToggleDetails,
+  onOpenCouncillorDetail,
   onSelectChoice,
 }) => {
   return (
@@ -806,33 +1084,18 @@ const EventContent: React.FC<EventContentProps> = ({
           {`"${councillor.motto}"`}
         </Text>
         <Button
-          variant="text"
-          aria-pressed={detailsVisible}
-          onClick={onToggleDetails}
+          variant="outlined"
+          startIcon={<InfoOutlinedIcon />}
+          onClick={() => {
+            onOpenCouncillorDetail(councillor.id);
+          }}
           sx={{
             alignSelf: 'flex-start',
-            color: '#e8c56f',
-            fontFamily: 'inherit',
-            fontWeight: 900,
-            px: 0,
-            textTransform: 'none',
+            ...outlineButtonSx,
           }}
         >
-          {detailsVisible ? 'Nascondi dettagli' : 'Mostra dettagli'}
+          Apri scheda consigliere
         </Button>
-        {detailsVisible ?
-          <Text
-            variant="body2"
-            color="rgb(255 245 218 / 76%)"
-            sx={{
-              borderLeft: '3px solid rgb(232 197 111 / 50%)',
-              pl: 1.5,
-              lineHeight: 1.55,
-            }}
-          >
-            {councillor.detail}
-          </Text>
-        : null}
       </Stack>
 
       <Stack gap={1} sx={{ maxWidth: 760 }}>
@@ -937,10 +1200,8 @@ const ResultContent: React.FC<ResultContentProps> = ({
             startIcon={<PlayArrowIcon />}
             onClick={onContinue}
             sx={{
+              ...actionButtonSx,
               minHeight: 50,
-              borderRadius: 1.5,
-              fontFamily: 'inherit',
-              fontWeight: 900,
               px: 2.5,
             }}
           >
@@ -953,13 +1214,8 @@ const ResultContent: React.FC<ResultContentProps> = ({
             onClick={onReset}
             sx={{
               minHeight: 50,
-              borderColor: 'rgb(232 197 111 / 40%)',
-              borderRadius: 1.5,
-              color: '#fff7df',
-              fontFamily: 'inherit',
-              fontWeight: 900,
+              ...outlineButtonSx,
               px: 2.5,
-              textTransform: 'none',
             }}
           >
             Ricomincia
@@ -973,15 +1229,123 @@ const ResultContent: React.FC<ResultContentProps> = ({
 interface EndingContentProps {
   gameState: CouncilGameState;
   ending: EndingDefinition;
-  onOpenTrailer: () => void;
+  onOpenArtifact: () => void;
+}
+
+interface DefeatContentProps {
+  gameState: CouncilGameState;
+  defeat: DefeatDefinition;
   onReset: () => void;
 }
+
+const DefeatContent: React.FC<DefeatContentProps> = ({
+  gameState,
+  defeat,
+  onReset,
+}) => {
+  return (
+    <Stack gap={2.25} sx={{ flex: 1, minWidth: 0 }}>
+      <Stack gap={1.25}>
+        <Text
+          variant="overline"
+          color="#ffb49d"
+          letterSpacing={0}
+          fontWeight={900}
+        >
+          Decreto fallito
+        </Text>
+        <Text
+          component="h1"
+          sx={{
+            maxWidth: 760,
+            fontSize: { xs: 40, md: 54 },
+            lineHeight: 0.98,
+            fontWeight: 900,
+            color: '#fff3cf',
+            textShadow: '0 4px 28px rgb(0 0 0 / 42%)',
+          }}
+        >
+          {defeat.title}
+        </Text>
+        <Text
+          variant="h6"
+          component="p"
+          color="rgb(255 245 218 / 84%)"
+          sx={{ maxWidth: 760, lineHeight: 1.45 }}
+        >
+          {defeat.text}
+        </Text>
+      </Stack>
+
+      <Stack
+        gap={1}
+        sx={{
+          maxWidth: 760,
+          border: '1px solid rgb(229 100 75 / 32%)',
+          borderRadius: 1.5,
+          background: 'rgb(74 28 24 / 22%)',
+          p: 1.5,
+        }}
+      >
+        <Text
+          variant="overline"
+          color="#ffb49d"
+          letterSpacing={0}
+          fontWeight={900}
+        >
+          Segnaposto illustrazione
+        </Text>
+        <Text
+          variant="body2"
+          color="rgb(255 245 218 / 78%)"
+          sx={{ lineHeight: 1.55 }}
+        >
+          {defeat.imagePrompt}
+        </Text>
+      </Stack>
+
+      {gameState.latestResolution != null ?
+        <Stack
+          gap={1}
+          sx={{
+            maxWidth: 760,
+            border: '1px solid rgb(232 197 111 / 24%)',
+            borderRadius: 1.5,
+            background: 'rgb(0 0 0 / 20%)',
+            p: 1.5,
+          }}
+        >
+          <Text variant="body1" fontWeight={900} color="#f7e4b1">
+            Ultimo decreto: {gameState.latestResolution.choice.result.title}
+          </Text>
+          <Text
+            variant="body2"
+            color="rgb(255 245 218 / 74%)"
+            sx={{ lineHeight: 1.5 }}
+          >
+            {gameState.latestResolution.choice.result.description}
+          </Text>
+          <StatDeltaList choice={gameState.latestResolution.choice} />
+        </Stack>
+      : null}
+
+      <Button
+        variant="contained"
+        size="large"
+        startIcon={<RestartAltIcon />}
+        onClick={onReset}
+        sx={{ ...actionButtonSx, alignSelf: 'flex-start', px: 2.5 }}
+      >
+        Nuova partita
+      </Button>
+    </Stack>
+  );
+};
 
 const EndingContent: React.FC<EndingContentProps> = ({
   gameState,
   ending,
-  onOpenTrailer,
-  onReset,
+  onOpenArtifact,
 }) => {
   return (
     <Stack gap={2.25} sx={{ flex: 1, minWidth: 0 }}>
@@ -1027,63 +1391,40 @@ const EndingContent: React.FC<EndingContentProps> = ({
       </Stack>
 
       <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        gap={1.5}
-        sx={{ maxWidth: 780 }}
+        gap={1.25}
+        sx={{
+          maxWidth: 780,
+          border: '1px solid rgb(232 197 111 / 28%)',
+          borderRadius: 1.5,
+          background: 'rgb(0 0 0 / 24%)',
+          p: 1.5,
+        }}
       >
-        <Box
-          component="img"
-          src={revealAssets.giftJumbo.src}
-          alt={revealAssets.giftJumbo.alt}
-          sx={{
-            width: { xs: '100%', md: '58%' },
-            maxHeight: 300,
-            objectFit: 'contain',
-            border: '1px solid rgb(232 197 111 / 34%)',
-            borderRadius: 1.5,
-            background: 'rgb(0 0 0 / 26%)',
-            p: 1,
-          }}
-        />
-        <Stack
-          gap={1.25}
-          sx={{
-            flex: 1,
-            border: '1px solid rgb(232 197 111 / 28%)',
-            borderRadius: 1.5,
-            background: 'rgb(0 0 0 / 24%)',
-            p: 1.5,
-          }}
+        <Text
+          variant="overline"
+          color="#e8c56f"
+          letterSpacing={0}
+          fontWeight={900}
         >
-          <Box
-            component="img"
-            src={revealAssets.giftBundle.src}
-            alt={revealAssets.giftBundle.alt}
-            sx={{ width: '100%', maxHeight: 150, objectFit: 'contain' }}
-          />
-          <Text variant="body1" fontWeight={900} color="#fff7df">
-            CK3 Starter Edition
-          </Text>
-          <Text variant="body2" color="rgb(255 245 218 / 76%)">
-            Gioco base, espansioni e gloria dinastica: la corte ha custodito il
-            segreto abbastanza a lungo.
-          </Text>
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<PlayArrowIcon />}
-            onClick={onOpenTrailer}
-            sx={{
-              alignSelf: 'flex-start',
-              borderRadius: 1.5,
-              fontFamily: 'inherit',
-              fontWeight: 900,
-              textTransform: 'none',
-            }}
-          >
-            Avvia il congegno antico
-          </Button>
-        </Stack>
+          Manufatto sigillato
+        </Text>
+        <Text
+          variant="body1"
+          color="rgb(255 245 218 / 80%)"
+          sx={{ lineHeight: 1.55 }}
+        >
+          Il Consiglio arretra di un passo. Nessuno osa rompere il sigillo al
+          posto vostro.
+        </Text>
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<PlayArrowIcon />}
+          onClick={onOpenArtifact}
+          sx={{ ...actionButtonSx, alignSelf: 'flex-start', px: 2.5 }}
+        >
+          Apri il manufatto
+        </Button>
       </Stack>
 
       <Stack gap={1.25} sx={{ maxWidth: 780 }}>
@@ -1148,35 +1489,36 @@ const EndingContent: React.FC<EndingContentProps> = ({
           })}
         </Box>
       </Stack>
-
-      <Button
-        variant="outlined"
-        size="large"
-        startIcon={<RestartAltIcon />}
-        onClick={onReset}
-        sx={{
-          alignSelf: 'flex-start',
-          borderColor: 'rgb(232 197 111 / 40%)',
-          borderRadius: 1.5,
-          color: '#fff7df',
-          fontFamily: 'inherit',
-          fontWeight: 900,
-          px: 2.5,
-          textTransform: 'none',
-        }}
-      >
-        Ricomincia dal Consiglio
-      </Button>
     </Stack>
   );
 };
 
-interface TrailerModalProps {
+interface ArtifactRevealModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const TrailerModal: React.FC<TrailerModalProps> = ({ open, onClose }) => {
+const ArtifactRevealModal: React.FC<ArtifactRevealModalProps> = ({
+  open,
+  onClose,
+}) => {
+  const [unlockValue, setUnlockValue] = useState(0);
+  const unlocked = unlockValue >= 100;
+
+  const handleUnlockInputChange = (
+    event:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.FormEvent<HTMLInputElement>,
+  ) => {
+    setUnlockValue(Number(event.currentTarget.value));
+  };
+
+  useEffect(() => {
+    if (!open) {
+      setUnlockValue(0);
+    }
+  }, [open]);
+
   if (!open) {
     return null;
   }
@@ -1185,7 +1527,7 @@ const TrailerModal: React.FC<TrailerModalProps> = ({ open, onClose }) => {
     <Stack
       role="dialog"
       aria-modal="true"
-      aria-label="Trailer del dono"
+      aria-label={unlocked ? 'Dono rivelato' : 'Manufatto sigillato'}
       alignItems="center"
       justifyContent="center"
       sx={{
@@ -1205,12 +1547,14 @@ const TrailerModal: React.FC<TrailerModalProps> = ({ open, onClose }) => {
           background:
             'linear-gradient(180deg, rgb(29 22 18 / 96%), rgb(10 9 10 / 98%))',
           boxShadow: '0 30px 120px rgb(0 0 0 / 62%)',
+          maxHeight: '92dvh',
+          overflow: 'auto',
           p: { xs: 1.25, md: 1.75 },
         }}
       >
         <Stack direction="row" justifyContent="space-between" gap={1.5}>
           <Text variant="body1" fontWeight={900} color="#fff7df">
-            Il congegno si anima
+            {unlocked ? 'Il congegno si anima' : 'Sigillo del manufatto'}
           </Text>
           <Button
             variant="text"
@@ -1226,31 +1570,134 @@ const TrailerModal: React.FC<TrailerModalProps> = ({ open, onClose }) => {
             Chiudi
           </Button>
         </Stack>
-        <Box
-          sx={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '16 / 9',
-            overflow: 'hidden',
-            borderRadius: 1.5,
-            background: '#000',
-          }}
-        >
-          <Box
-            component="iframe"
-            src={revealAssets.trailerEmbedUrl}
-            title="Crusader Kings III trailer"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
+
+        {unlocked ?
+          <Stack gap={1.5}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              gap={1.5}
+              alignItems="stretch"
+            >
+              <Box
+                component="img"
+                src={revealAssets.giftJumbo.src}
+                alt={revealAssets.giftJumbo.alt}
+                sx={{
+                  width: { xs: '100%', md: '58%' },
+                  maxHeight: 300,
+                  objectFit: 'contain',
+                  border: '1px solid rgb(232 197 111 / 34%)',
+                  borderRadius: 1.5,
+                  background: 'rgb(0 0 0 / 26%)',
+                  p: 1,
+                }}
+              />
+              <Stack
+                gap={1.25}
+                sx={{
+                  flex: 1,
+                  border: '1px solid rgb(232 197 111 / 28%)',
+                  borderRadius: 1.5,
+                  background: 'rgb(0 0 0 / 24%)',
+                  p: 1.5,
+                }}
+              >
+                <Box
+                  component="img"
+                  src={revealAssets.giftBundle.src}
+                  alt={revealAssets.giftBundle.alt}
+                  sx={{ width: '100%', maxHeight: 150, objectFit: 'contain' }}
+                />
+                <Text variant="h5" fontWeight={900} color="#fff7df">
+                  CK3 Starter Edition
+                </Text>
+                <Text
+                  variant="body2"
+                  color="rgb(255 245 218 / 76%)"
+                  sx={{ lineHeight: 1.5 }}
+                >
+                  Gioco base, espansioni e gloria dinastica: la corte ha
+                  custodito il segreto abbastanza a lungo.
+                </Text>
+              </Stack>
+            </Stack>
+
+            <Box
+              sx={{
+                position: 'relative',
+                width: '100%',
+                aspectRatio: '16 / 9',
+                overflow: 'hidden',
+                borderRadius: 1.5,
+                background: '#000',
+              }}
+            >
+              <Box
+                component="iframe"
+                src={revealAssets.trailerEmbedUrl}
+                title="Crusader Kings III trailer"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 0,
+                }}
+              />
+            </Box>
+          </Stack>
+        : <Stack
+            gap={1.5}
             sx={{
-              position: 'absolute',
-              inset: 0,
               width: '100%',
-              height: '100%',
-              border: 0,
+              border: '1px solid rgb(232 197 111 / 26%)',
+              borderRadius: 1.5,
+              background: 'rgb(0 0 0 / 24%)',
+              p: { xs: 1.5, md: 2 },
             }}
-          />
-        </Box>
+          >
+            <Text variant="h5" fontWeight={900} color="#fff3cf">
+              Fate scorrere il sigillo fino in fondo
+            </Text>
+            <Text
+              variant="body1"
+              color="rgb(255 245 218 / 78%)"
+              sx={{ lineHeight: 1.55 }}
+            >
+              Il Consiglio chiede una conferma solenne. Una volta aperto, il
+              manufatto non potrà più fingere di essere solo una pergamena.
+            </Text>
+            <Stack direction="row" alignItems="center" gap={1.25}>
+              <Text variant="caption" fontWeight={900} color="#f7e4b1" noWrap>
+                Chiuso
+              </Text>
+              <Box
+                component="input"
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={unlockValue}
+                aria-label="Apri il manufatto"
+                onChange={handleUnlockInputChange}
+                onInput={handleUnlockInputChange}
+                sx={{
+                  width: '100%',
+                  accentColor: '#e8c56f',
+                  cursor: 'pointer',
+                }}
+              />
+              <Text variant="caption" fontWeight={900} color="#f7e4b1" noWrap>
+                Aperto
+              </Text>
+            </Stack>
+            <Text variant="body2" color="rgb(255 242 207 / 68%)">
+              Avanzamento sigillo: {unlockValue}%
+            </Text>
+          </Stack>
+        }
       </Stack>
     </Stack>
   );
@@ -1261,12 +1708,12 @@ interface MainSceneContentProps {
   currentEvent: CouncilEvent;
   currentCouncillor: CouncillorProfile;
   ending: EndingDefinition;
-  detailsVisible: boolean;
+  defeat: DefeatDefinition;
   onStart: () => void;
   onContinue: () => void;
-  onOpenTrailer: () => void;
+  onOpenArtifact: () => void;
+  onOpenCouncillorDetail: (councillorId: CouncillorId) => void;
   onReset: () => void;
-  onToggleDetails: () => void;
   onSelectChoice: (choice: CouncilChoice) => void;
 }
 
@@ -1275,12 +1722,12 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
   currentEvent,
   currentCouncillor,
   ending,
-  detailsVisible,
+  defeat,
   onStart,
   onContinue,
-  onOpenTrailer,
+  onOpenArtifact,
+  onOpenCouncillorDetail,
   onReset,
-  onToggleDetails,
   onSelectChoice,
 }) => {
   if (gameState.phase === 'intro') {
@@ -1292,8 +1739,7 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
       <EventContent
         event={currentEvent}
         councillor={currentCouncillor}
-        detailsVisible={detailsVisible}
-        onToggleDetails={onToggleDetails}
+        onOpenCouncillorDetail={onOpenCouncillorDetail}
         onSelectChoice={onSelectChoice}
       />
     );
@@ -1304,9 +1750,14 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
       <EndingContent
         gameState={gameState}
         ending={ending}
-        onOpenTrailer={onOpenTrailer}
-        onReset={onReset}
+        onOpenArtifact={onOpenArtifact}
       />
+    );
+  }
+
+  if (gameState.phase === 'defeat') {
+    return (
+      <DefeatContent gameState={gameState} defeat={defeat} onReset={onReset} />
     );
   }
 
@@ -1326,8 +1777,9 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
 };
 
 const StrategyGameHome: React.FC = () => {
-  const [detailsVisible, setDetailsVisible] = useState(false);
-  const [trailerOpen, setTrailerOpen] = useState(false);
+  const [artifactOpen, setArtifactOpen] = useState(false);
+  const [profileModalCouncillorId, setProfileModalCouncillorId] =
+    useState<CouncillorId>();
   const [selectedCouncillorId, setSelectedCouncillorId] =
     useState<CouncillorId>('lauretana');
   const {
@@ -1358,14 +1810,24 @@ const StrategyGameHome: React.FC = () => {
   const selectedCouncillor = councillorProfiles[selectedCouncillorId];
   const endingDefinition =
     endingDefinitions[gameState.endingTier ?? 'noble-chaos'];
+  const defeatDefinition =
+    defeatDefinitions[gameState.defeatReason ?? 'stress-meltdown'];
+  const profileModalCouncillor =
+    profileModalCouncillorId == null ? undefined : (
+      councillorProfiles[profileModalCouncillorId]
+    );
   const activeFigure =
-    gameState.phase === 'intro' || gameState.phase === 'ending' ?
+    (
+      gameState.phase === 'intro' ||
+      gameState.phase === 'ending' ||
+      gameState.phase === 'defeat'
+    ) ?
       { src: heroAssets.georgia.src, alt: heroAssets.georgia.alt }
     : { src: currentCouncillor.fullSrc, alt: currentCouncillor.fullAlt };
 
   const handleNewGame = () => {
-    setDetailsVisible(false);
-    setTrailerOpen(false);
+    setArtifactOpen(false);
+    setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
     beginNewGame();
     enableMusic();
@@ -1380,22 +1842,22 @@ const StrategyGameHome: React.FC = () => {
       councilEvents[savedGameState.currentEventIndex]?.councillorId ??
       'lauretana';
 
-    setDetailsVisible(false);
-    setTrailerOpen(false);
+    setArtifactOpen(false);
+    setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(savedCouncillor);
     loadCouncil();
     enableMusic();
   };
 
   const handleStartCouncil = () => {
-    setDetailsVisible(false);
+    setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(currentEvent.councillorId);
     startCouncil();
   };
 
   const handleResetCouncil = () => {
-    setDetailsVisible(false);
-    setTrailerOpen(false);
+    setArtifactOpen(false);
+    setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
     pauseMusic();
     resetCouncil();
@@ -1404,17 +1866,13 @@ const StrategyGameHome: React.FC = () => {
   const handleContinueCouncil = () => {
     const nextEventIndex = gameState.currentEventIndex + 1;
 
-    setDetailsVisible(false);
+    setProfileModalCouncillorId(undefined);
 
     if (nextEventIndex < councilEvents.length) {
       setSelectedCouncillorId(councilEvents[nextEventIndex].councillorId);
     }
 
     continueCouncil();
-  };
-
-  const toggleDetails = () => {
-    setDetailsVisible((currentValue) => !currentValue);
   };
 
   const shellSx = {
@@ -1533,14 +1991,16 @@ const StrategyGameHome: React.FC = () => {
                 currentEvent={currentEvent}
                 currentCouncillor={currentCouncillor}
                 ending={endingDefinition}
-                detailsVisible={detailsVisible}
+                defeat={defeatDefinition}
                 onStart={handleStartCouncil}
                 onContinue={handleContinueCouncil}
-                onOpenTrailer={() => {
-                  setTrailerOpen(true);
+                onOpenArtifact={() => {
+                  setArtifactOpen(true);
+                }}
+                onOpenCouncillorDetail={(councillorId) => {
+                  setProfileModalCouncillorId(councillorId);
                 }}
                 onReset={handleResetCouncil}
-                onToggleDetails={toggleDetails}
                 onSelectChoice={selectChoice}
               />
 
@@ -1671,8 +2131,10 @@ const StrategyGameHome: React.FC = () => {
                 councillor={selectedCouncillor}
                 inAudience={
                   gameState.phase !== 'ending' &&
+                  gameState.phase !== 'defeat' &&
                   selectedCouncillorId === currentEvent.councillorId
                 }
+                onOpenDetails={setProfileModalCouncillorId}
               />
             </Stack>
 
@@ -1718,10 +2180,16 @@ const StrategyGameHome: React.FC = () => {
           </Stack>
         </Stack>
       </Stack>
-      <TrailerModal
-        open={trailerOpen}
+      <CouncillorProfileModal
+        councillor={profileModalCouncillor}
         onClose={() => {
-          setTrailerOpen(false);
+          setProfileModalCouncillorId(undefined);
+        }}
+      />
+      <ArtifactRevealModal
+        open={artifactOpen}
+        onClose={() => {
+          setArtifactOpen(false);
         }}
       />
     </Stack>

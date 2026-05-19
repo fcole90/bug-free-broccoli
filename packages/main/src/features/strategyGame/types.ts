@@ -21,9 +21,20 @@ export type CouncillorId =
   | 'roberta'
   | 'phabous';
 
-export type GamePhase = 'intro' | 'event' | 'result' | 'ending';
+export type GamePhase = 'intro' | 'event' | 'result' | 'ending' | 'defeat';
 
-export type EndingTier = 'dynastic-triumph' | 'noble-chaos' | 'last-resort';
+export type EndingTier =
+  | 'dynastic-triumph'
+  | 'golden-prosperity'
+  | 'courtly-legend'
+  | 'noble-chaos'
+  | 'last-resort';
+
+export type DefeatReason =
+  | 'stress-meltdown'
+  | 'suspicion-exposed'
+  | 'treasury-empty'
+  | 'harmony-broken';
 
 export interface MusicConfig {
   src: string;
@@ -72,6 +83,8 @@ export interface CouncillorProfile {
   traits: readonly string[];
   motto: string;
   detail: string;
+  approach: string;
+  warning: string;
   fullSrc: string;
   fullAlt: string;
   mugshotSrc: string;
@@ -108,6 +121,7 @@ export interface ChoiceResolution {
   previousStats: GameStats;
   nextStats: GameStats;
   earnedSigil?: CouncillorId;
+  defeatReason?: DefeatReason;
 }
 
 export interface EndingDefinition {
@@ -115,6 +129,13 @@ export interface EndingDefinition {
   title: string;
   text: string;
   revealLine: string;
+}
+
+export interface DefeatDefinition {
+  reason: DefeatReason;
+  title: string;
+  text: string;
+  imagePrompt: string;
 }
 
 export interface CouncilGameState {
@@ -125,4 +146,5 @@ export interface CouncilGameState {
   currentEventIndex: number;
   latestResolution?: ChoiceResolution;
   endingTier?: EndingTier;
+  defeatReason?: DefeatReason;
 }
