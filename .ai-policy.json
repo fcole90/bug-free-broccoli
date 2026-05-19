@@ -22,8 +22,8 @@
     "temp/",
     "logs/",
     ".turbo/",
-    ".playground/",
-    ".tasks/"
+    ".agents/playground/",
+    ".agents/tasks/"
   ],
   "whitelistedFiles": [],
   "terminalAutoApprove": {

@@ -180,7 +180,7 @@ Start with the skills that are most transferable across projects:
 - shared `tool-maintain-skills` for keeping top-level instructions slim and moving detail into the right skills.
 - `ref-swiftpost-code-conventions` if the target repo is also TypeScript/React or close enough to adapt it quickly.
 - `ref-swiftpost-site-architecture`, `ref-swiftpost-styling`, and `ref-swiftpost-next` only if the target repo has the same broad problem space.
-- shared `ref-agents-local-tasks` and `tool-handle-agents-local-tasks` if the target repo wants local task tracking; adapt their portable `.agents/tasks/` default to `.tasks/` when using this template's root-level workspace convention.
+- shared `ref-agents-local-tasks` and `tool-handle-agents-local-tasks` if the target repo wants local task tracking; keep their portable `.agents/tasks/` default unless the target explicitly chooses a different local workspace convention.
 
 Do **not** copy SwiftPost-specific skills unchanged into another repo. Skills such as `ref-swiftpost-elysium`, `ref-swiftpost-main`, and `ref-swiftpost-config` should be treated as examples of package-specific skills, not as generic reusable guidance.
 
@@ -201,7 +201,7 @@ For the AI-safety system, the important source files are:
 - `scripts/sync-ai-policy.mts` as the sync implementation.
 - `package.json` scripts that run the sync, especially `sync:ai-policy`, `sync:ai-policy:import-vscode`, and the `prepare` hook.
 - `.claude/CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` if the target repo wants the same cross-agent routing pattern.
-- `.playground/` as ignored local agent scratch space and `.tasks/` as ignored local task tracking, when the target wants root-level local workspaces.
+- `.agents/playground/` as ignored local agent scratch space and `.agents/tasks/` as ignored local task tracking, when the target wants this template's local workspace convention.
 
 Generated files should usually be regenerated in the target repo instead of copied as authoritative source:
 

@@ -38,14 +38,14 @@ For Next.js-specific constraints and page patterns, see the **ref-swiftpost-next
 
 ## Local Agent Workspaces
 
-The root-level `.playground/` and `.tasks/` directories are local-only agent workspaces. They are ignored by Git and excluded from AI context through `.ai-policy.json`.
+The `.agents/playground/` and `.agents/tasks/` directories are local-only agent workspaces. They are ignored by Git and excluded from AI context through `.ai-policy.json`.
 
 | Path | Purpose | Rule |
 |------|---------|------|
-| `.playground/` | Temporary helper scripts, scratch files, generated local artifacts, and other short-lived agent work. | Do not put committed source, durable documentation, or secrets here. Promote anything reusable into the proper package, script, doc, or skill. |
-| `.tasks/` | Local task tracking, backlog notes, task briefs, validation notes, and temporary planning artifacts. | Keep it local and current. Promote durable decisions into committed docs or skills instead of relying on ignored notes. |
+| `.agents/playground/` | Temporary helper scripts, scratch files, generated local artifacts, and other short-lived agent work. | Do not put committed source, durable documentation, or secrets here. Promote anything reusable into the proper package, script, doc, or skill. |
+| `.agents/tasks/` | Local task tracking, backlog notes, task briefs, validation notes, and temporary planning artifacts. | Keep it local and current. Promote durable decisions into committed docs or skills instead of relying on ignored notes. |
 
-If a shared skill describes `.agents/playground/` or `.agents/tasks/` as a portable default, use `.playground/` and `.tasks/` in this repository unless the user explicitly asks for the portable layout.
+If a shared skill describes `.agents/playground/` or `.agents/tasks/` as a portable default, use those `.agents/` paths in this repository.
 
 ## `packages/main/src/` Directory Map
 

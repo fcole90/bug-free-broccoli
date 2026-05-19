@@ -36,7 +36,7 @@ Project skills are located in `.agents/skills/` and automatically load in Copilo
 - Use when: updating Copilot, Gemini, or Claude instruction bridges
 
 **`ref-agents-local-tasks`** — Portable local backlog and task-note workflow
-- Use when: reading or updating local task tracking; in this repo, apply the workflow to `.tasks/` per Local Agent Workspaces below
+- Use when: reading or updating local task tracking under `.agents/tasks/`
 
 **`ref-agents-persona`** — Agent voice and workflow expectations
 - Use when: starting work, planning commits, or preserving the expected collaboration style
@@ -84,7 +84,7 @@ Project skills are located in `.agents/skills/` and automatically load in Copilo
 - Use when: staging and committing changed files
 
 **`tool-handle-agents-local-tasks`** — Work through local task backlog
-- Use when: processing the local task backlog; in this repo, use `.tasks/TODO.md` unless the user explicitly asks for the portable `.agents/tasks/` layout
+- Use when: processing the local task backlog under `.agents/tasks/TODO.md`
 
 **`tool-maintain-agents-instructions`** — Refresh agent instruction files
 - Use when: instruction files may be stale after skill or workflow changes
@@ -131,10 +131,10 @@ When working on this project:
 
 ## Local Agent Workspaces
 
-- Use `.playground/` for temporary helper scripts, scratch files, and generated local artifacts that should not enter normal repo context.
-- Use `.tasks/` for local task tracking, task briefs, validation notes, and other ignored planning artifacts.
+- Use `.agents/playground/` for temporary helper scripts, scratch files, and generated local artifacts that should not enter normal repo context.
+- Use `.agents/tasks/` for local task tracking, task briefs, validation notes, and other ignored planning artifacts.
 - Both folders are ignored by Git and listed in `.ai-policy.json` `excludedFiles`; do not put committed source, durable documentation, or secrets there.
-- If a shared portable skill mentions `.agents/playground/` or `.agents/tasks/`, use `.playground/` and `.tasks/` in this repository unless the user explicitly asks for the portable layout.
+- If a shared portable skill mentions `.agents/playground/` or `.agents/tasks/`, use those `.agents/` paths in this repository.
 
 For AI-assisted terminal runs, prefer the `:ci` variants of Turbo tasks because `--ui stream` avoids the interactive TUI and produces clean captured output.
 
@@ -172,7 +172,7 @@ This repository defines AI policy in `.ai-policy.json`.
 - Any file within the `secrets/` directory
 - Any file named `internal-config.yml`
 
-**Excluded but non-sensitive patterns** include generated output such as `node_modules`, `.next`, `dist`, `build`, `out`, `.turbo`, `logs`, `.playground`, `.tasks`, and temporary files.
+**Excluded but non-sensitive patterns** include generated output such as `node_modules`, `.next`, `dist`, `build`, `out`, `.turbo`, `logs`, `.agents/playground`, `.agents/tasks`, and temporary files.
 
 **Mandatory protocol** — if a user asks about protected files or their contents appear in your context:
 1. **DO NOT** read, summarize, modify, or output their contents.
