@@ -388,11 +388,27 @@ const writeStoredGameState = (gameState: CouncilGameState) => {
   }
 };
 
+const clearStoredGameState = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(councilGameStorageKey);
+  } catch {
+    // Ignore storage failures so the menu can still reset the local game state.
+  }
+};
+
 export const useCouncilGame = () => {
   const [gameState, setGameState] = useState<CouncilGameState>(() =>
     createInitialGameState(),
   );
+  const [storedGameState, setStoredGameState] = useState<
+    CouncilGameState | undefined
+  >();
   const [storageReady, setStorageReady] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
 
   const currentEvent = councilEvents[gameState.currentEventIndex];
   const currentCouncillor = councillorProfiles[currentEvent.councillorId];
@@ -401,26 +417,45 @@ export const useCouncilGame = () => {
     const storedState = readStoredGameState();
 
     if (storedState != null) {
-      setGameState(storedState);
+      setStoredGameState(storedState);
     }
 
     setStorageReady(true);
   }, []);
 
   useEffect(() => {
-    if (!storageReady) {
+    if (!storageReady || !gameStarted) {
       return;
     }
 
     writeStoredGameState(gameState);
-  }, [gameState, storageReady]);
+    setStoredGameState(gameState);
+  }, [gameStarted, gameState, storageReady]);
+
+  const beginNewGame = useCallback(() => {
+    setGameState(createInitialGameState());
+    setGameStarted(true);
+  }, []);
+
+  const loadCouncil = useCallback(() => {
+    if (storedGameState == null) {
+      return;
+    }
+
+    setGameState(storedGameState);
+    setGameStarted(true);
+  }, [storedGameState]);
 
   const startCouncil = useCallback(() => {
+    setGameStarted(true);
     setGameState({ ...createInitialGameState(), phase: 'event' });
   }, []);
 
   const resetCouncil = useCallback(() => {
     setGameState(createInitialGameState());
+    setStoredGameState(undefined);
+    setGameStarted(false);
+    clearStoredGameState();
   }, []);
 
   const continueCouncil = useCallback(() => {
@@ -482,6 +517,12 @@ export const useCouncilGame = () => {
     currentEvent,
     currentCouncillor,
     earnedSigilSet,
+    gameStarted,
+    hasSavedGame: storedGameState != null,
+    savedGameState: storedGameState,
+    storageReady,
+    beginNewGame,
+    loadCouncil,
     startCouncil,
     resetCouncil,
     continueCouncil,

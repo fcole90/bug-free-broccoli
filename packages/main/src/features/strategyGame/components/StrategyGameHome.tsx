@@ -488,6 +488,156 @@ const ChoiceButton: React.FC<ChoiceButtonProps> = ({ choice, onSelect }) => {
   );
 };
 
+const getSavedGameLabel = (
+  savedGameState: CouncilGameState | undefined,
+  storageReady: boolean,
+) => {
+  if (!storageReady) {
+    return 'Controllo degli archivi in corso.';
+  }
+
+  if (savedGameState == null) {
+    return 'Nessun decreto sospeso negli archivi.';
+  }
+
+  if (savedGameState.phase === 'ending') {
+    return 'Decreto finale pronto per essere riaperto.';
+  }
+
+  if (savedGameState.phase === 'result') {
+    return `Archivio fermo dopo l'udienza ${savedGameState.currentEventIndex + 1}.`;
+  }
+
+  return `Archivio fermo all'udienza ${savedGameState.currentEventIndex + 1}.`;
+};
+
+interface MainMenuContentProps {
+  hasSavedGame: boolean;
+  savedGameState?: CouncilGameState;
+  storageReady: boolean;
+  onNewGame: () => void;
+  onLoadGame: () => void;
+}
+
+const MainMenuContent: React.FC<MainMenuContentProps> = ({
+  hasSavedGame,
+  savedGameState,
+  storageReady,
+  onNewGame,
+  onLoadGame,
+}) => {
+  return (
+    <Stack
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        minHeight: '100dvh',
+        width: '100%',
+        px: { xs: 2, md: 3 },
+        py: { xs: 3, md: 5 },
+      }}
+    >
+      <Stack
+        gap={2.25}
+        alignItems="center"
+        textAlign="center"
+        sx={{
+          ...panelSx,
+          width: 'min(720px, 100%)',
+          p: { xs: 2.5, md: 4 },
+        }}
+      >
+        <Box
+          component="img"
+          src={heroAssets.liegeCrown.src}
+          alt={heroAssets.liegeCrown.alt}
+          sx={{ width: 76, height: 76, objectFit: 'contain' }}
+        />
+        <Stack gap={1} alignItems="center">
+          <Text
+            variant="overline"
+            color="#e8c56f"
+            letterSpacing={0}
+            fontWeight={900}
+          >
+            Archivio del Genetliaco
+          </Text>
+          <Text
+            component="h1"
+            sx={{
+              maxWidth: 620,
+              fontSize: { xs: 42, md: 58 },
+              lineHeight: 0.96,
+              fontWeight: 900,
+              color: '#fff3cf',
+              textShadow: '0 4px 28px rgb(0 0 0 / 42%)',
+            }}
+          >
+            {gameTitle}
+          </Text>
+          <Text
+            variant="body1"
+            color="rgb(255 245 218 / 80%)"
+            sx={{ maxWidth: 560, lineHeight: 1.55 }}
+          >
+            Aprite una nuova udienza o riprendete un decreto sospeso. La musica
+            di corte partirà quando varcherete la soglia della sala.
+          </Text>
+        </Stack>
+
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          gap={1.25}
+          sx={{ width: 'min(480px, 100%)' }}
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            startIcon={<PlayArrowIcon />}
+            onClick={onNewGame}
+            sx={{
+              flex: 1,
+              minHeight: 54,
+              borderRadius: 1.5,
+              fontFamily: 'inherit',
+              fontWeight: 900,
+            }}
+          >
+            Nuova partita
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            disabled={!storageReady || !hasSavedGame}
+            onClick={onLoadGame}
+            sx={{
+              flex: 1,
+              minHeight: 54,
+              borderColor: 'rgb(232 197 111 / 40%)',
+              borderRadius: 1.5,
+              color: '#fff7df',
+              fontFamily: 'inherit',
+              fontWeight: 900,
+              textTransform: 'none',
+              '&.Mui-disabled': {
+                borderColor: 'rgb(255 255 255 / 14%)',
+                color: 'rgb(255 245 218 / 36%)',
+              },
+            }}
+          >
+            Carica partita
+          </Button>
+        </Stack>
+
+        <Text variant="body2" color="rgb(255 242 207 / 66%)">
+          {getSavedGameLabel(savedGameState, storageReady)}
+        </Text>
+      </Stack>
+    </Stack>
+  );
+};
+
 interface IntroContentProps {
   onStart: () => void;
 }
@@ -1180,13 +1330,25 @@ const StrategyGameHome: React.FC = () => {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [selectedCouncillorId, setSelectedCouncillorId] =
     useState<CouncillorId>('lauretana');
-  const { musicEnabled, musicVolume, setMusicVolume, toggleMusic } =
-    useBackgroundMusic(musicConfig);
+  const {
+    musicEnabled,
+    musicVolume,
+    enableMusic,
+    pauseMusic,
+    setMusicVolume,
+    toggleMusic,
+  } = useBackgroundMusic(musicConfig);
   const {
     gameState,
     currentEvent,
     currentCouncillor,
     earnedSigilSet,
+    gameStarted,
+    hasSavedGame,
+    savedGameState,
+    storageReady,
+    beginNewGame,
+    loadCouncil,
     startCouncil,
     resetCouncil,
     continueCouncil,
@@ -1201,6 +1363,30 @@ const StrategyGameHome: React.FC = () => {
       { src: heroAssets.georgia.src, alt: heroAssets.georgia.alt }
     : { src: currentCouncillor.fullSrc, alt: currentCouncillor.fullAlt };
 
+  const handleNewGame = () => {
+    setDetailsVisible(false);
+    setTrailerOpen(false);
+    setSelectedCouncillorId('lauretana');
+    beginNewGame();
+    enableMusic();
+  };
+
+  const handleLoadGame = () => {
+    if (savedGameState == null) {
+      return;
+    }
+
+    const savedCouncillor =
+      councilEvents[savedGameState.currentEventIndex]?.councillorId ??
+      'lauretana';
+
+    setDetailsVisible(false);
+    setTrailerOpen(false);
+    setSelectedCouncillorId(savedCouncillor);
+    loadCouncil();
+    enableMusic();
+  };
+
   const handleStartCouncil = () => {
     setDetailsVisible(false);
     setSelectedCouncillorId(currentEvent.councillorId);
@@ -1211,6 +1397,7 @@ const StrategyGameHome: React.FC = () => {
     setDetailsVisible(false);
     setTrailerOpen(false);
     setSelectedCouncillorId('lauretana');
+    pauseMusic();
     resetCouncil();
   };
 
@@ -1230,33 +1417,50 @@ const StrategyGameHome: React.FC = () => {
     setDetailsVisible((currentValue) => !currentValue);
   };
 
+  const shellSx = {
+    minHeight: '100dvh',
+    width: '100%',
+    overflowX: 'hidden',
+    color: '#fff7df',
+    fontFamily: 'inherit',
+    background:
+      'radial-gradient(circle at 18% 18%, rgb(117 50 36 / 28%), transparent 32%), linear-gradient(135deg, #171111 0%, #272016 48%, #111516 100%)',
+  };
+
+  if (!gameStarted) {
+    return (
+      <Stack component="main" sx={shellSx}>
+        <MainMenuContent
+          hasSavedGame={hasSavedGame}
+          savedGameState={savedGameState}
+          storageReady={storageReady}
+          onNewGame={handleNewGame}
+          onLoadGame={handleLoadGame}
+        />
+      </Stack>
+    );
+  }
+
   return (
-    <Stack
-      component="main"
-      sx={{
-        minHeight: '100dvh',
-        width: '100%',
-        overflow: 'hidden',
-        color: '#fff7df',
-        fontFamily: 'inherit',
-        background:
-          'radial-gradient(circle at 18% 18%, rgb(117 50 36 / 28%), transparent 32%), linear-gradient(135deg, #171111 0%, #272016 48%, #111516 100%)',
-      }}
-    >
+    <Stack component="main" sx={shellSx}>
       <Stack
-        gap={{ xs: 2, md: 3 }}
+        gap={{ xs: 2, sm: 2, md: 3 }}
         sx={{
           width: '100%',
           maxWidth: 1240,
           mx: 'auto',
           px: { xs: 2, md: 3 },
-          py: { xs: 2, md: 3 },
+          py: { xs: 2, sm: 2, md: 3 },
+          height: { sm: '100dvh' },
+          minHeight: { xs: '100dvh', sm: 0 },
+          overflow: { sm: 'hidden' },
         }}
       >
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           justifyContent="space-between"
           gap={2}
+          sx={{ flex: '0 0 auto' }}
         >
           <Stack direction="row" alignItems="center" gap={1.25} minWidth={0}>
             <Box
@@ -1288,17 +1492,25 @@ const StrategyGameHome: React.FC = () => {
         </Stack>
 
         <Stack
-          direction={{ xs: 'column', lg: 'row' }}
+          direction={{ xs: 'column', sm: 'row' }}
           gap={{ xs: 2, md: 3 }}
-          sx={{ alignItems: 'stretch', minHeight: { lg: 640 } }}
+          sx={{
+            alignItems: 'stretch',
+            flex: { sm: '1 1 auto' },
+            minHeight: 0,
+            overflow: { sm: 'hidden' },
+          }}
         >
           <Stack
             gap={2}
             sx={{
               ...panelSx,
-              flex: { lg: '1 1 58%' },
+              flex: { sm: '0 0 58%' },
+              width: { sm: '58%' },
+              minHeight: { sm: 0 },
+              height: { sm: '100%' },
               position: 'relative',
-              overflow: 'hidden',
+              overflow: { xs: 'hidden', sm: 'auto' },
               p: { xs: 2, md: 3 },
             }}
           >
@@ -1336,9 +1548,11 @@ const StrategyGameHome: React.FC = () => {
                 alignItems="center"
                 justifyContent="flex-end"
                 sx={{
+                  display: { xs: 'none', lg: 'flex' },
                   minHeight: { xs: 360, md: 540 },
                   flex: { md: '0 0 260px' },
                   position: 'relative',
+                  pointerEvents: 'none',
                 }}
               >
                 <Box
@@ -1350,13 +1564,26 @@ const StrategyGameHome: React.FC = () => {
                     maxHeight: { xs: 420, md: 560 },
                     objectFit: 'contain',
                     filter: 'drop-shadow(0 28px 46px rgb(0 0 0 / 55%))',
+                    pointerEvents: 'none',
                   }}
                 />
               </Stack>
             </Stack>
           </Stack>
 
-          <Stack gap={2} sx={{ flex: { lg: '1 1 42%' }, minWidth: 0 }}>
+          <Stack
+            gap={2}
+            sx={{
+              flex: { sm: '1 1 42%' },
+              minWidth: 0,
+              minHeight: 0,
+              height: { sm: '100%' },
+              overflowX: 'hidden',
+              overflowY: { sm: 'auto' },
+              pr: { sm: 0.5 },
+              pb: { sm: 0.5 },
+            }}
+          >
             <Stack
               gap={1.5}
               sx={{
@@ -1423,8 +1650,8 @@ const StrategyGameHome: React.FC = () => {
                   display: 'grid',
                   gridTemplateColumns: {
                     xs: 'repeat(2, minmax(0, 1fr))',
-                    sm: 'repeat(5, minmax(0, 1fr))',
-                    lg: 'repeat(3, minmax(0, 1fr))',
+                    sm: 'repeat(2, minmax(0, 1fr))',
+                    md: 'repeat(3, minmax(0, 1fr))',
                   },
                   gap: 1.25,
                   justifyItems: 'center',
