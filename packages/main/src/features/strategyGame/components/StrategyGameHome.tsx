@@ -2629,7 +2629,7 @@ const StrategyGameHome: React.FC = () => {
     selectChoice,
   } = useCouncilGame();
   const activeMusicSrc =
-    !gameStarted ? musicConfig.introSrc
+    !gameStarted || gameState.phase === 'intro' ? musicConfig.introSrc
     : gameState.phase === 'ending' ? musicConfig.victorySrc
     : gameState.phase === 'defeat' ? musicConfig.defeatSrc
     : musicConfig.councilSrc;

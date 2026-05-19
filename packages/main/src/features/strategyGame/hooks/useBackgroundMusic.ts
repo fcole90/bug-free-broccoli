@@ -17,7 +17,7 @@ interface UseBackgroundMusicResult {
   toggleMusic: () => void;
 }
 
-const musicVolumeStorageKey = 'genetliaco:music-volume:v1';
+const musicVolumeStorageKey = 'genetliaco:music-volume:v2';
 
 const isMusicVolume = (value: number): value is MusicVolume => {
   return MUSIC_VOLUME_VALUES.includes(value as MusicVolume);
