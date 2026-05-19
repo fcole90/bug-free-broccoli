@@ -665,6 +665,8 @@ const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
   inAudience,
   onOpenDetails,
 }) => {
+  const shortDescription = `${councillor.detail} ${councillor.approach}`;
+
   return (
     <Stack
       gap={0.85}
@@ -717,28 +719,16 @@ const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
       <Text
         variant="body2"
         color="rgb(255 245 218 / 76%)"
+        title={shortDescription}
         sx={{
           display: '-webkit-box',
           lineHeight: 1.35,
           overflow: 'hidden',
           WebkitBoxOrient: 'vertical',
-          WebkitLineClamp: 2,
+          WebkitLineClamp: 4,
         }}
       >
-        {councillor.detail}
-      </Text>
-      <Text
-        variant="body2"
-        color="rgb(255 245 218 / 72%)"
-        sx={{
-          display: '-webkit-box',
-          lineHeight: 1.35,
-          overflow: 'hidden',
-          WebkitBoxOrient: 'vertical',
-          WebkitLineClamp: 2,
-        }}
-      >
-        {councillor.approach}
+        {shortDescription}
       </Text>
       {inAudience ?
         <Text variant="caption" fontWeight={900} color="#b9e6b9">

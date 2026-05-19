@@ -136,9 +136,9 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     traits: ['Frugale', 'Diligente', 'Testarda'],
     motto: 'Ogni moneta ha una fonte. Ogni fonte ha una nota a pie pagina.',
     detail:
-      'Lauretana considera ogni spreco un piccolo tradimento feudale. Pretende ricevute, fonti e sigilli con la stessa calma con cui altri chiedono acqua. Dietro la severità c’è una forma bizzarra di affetto: se il piano è ben rendicontato, lei proteggerà la sorpresa come una reliquia fiscale.',
+      'Lauretana amministra il Tesoro con il polso di chi ha trasformato la contabilità in arte dinastica. Ogni moneta deve avere fonte, ricevuta e sigillo; ogni spesa passa per registri che potrebbero intimidire un imperatore. I suoi contatti con le grandi casate del Sacro Romano Impero tengono quieti i nobili scialacquatori, ma dietro la severità c’è una forma bizzarra di affetto: se il piano è ben rendicontato, lei proteggerà la sorpresa come una reliquia fiscale.',
     approach:
-      'Ama i decreti sobri, verificabili e coperti da registri. Le scelte che abbassano il Sospetto spesso le sembrano sagge anche quando costano Oro.',
+      'Ama i decreti sobri, verificabili e coperti da registri in triplice copia. Le scelte che abbassano il Sospetto spesso le sembrano sagge anche quando costano Oro, purché la Corona possa dimostrare di non aver bruciato il patrimonio in capricci.',
     warning:
       'Le voci opache la fanno irrigidire. Se le casse sono già fragili, un’altra spesa può mandare il Tesoro in rovina.',
     fullSrc: publicAsset('/character-full-lauretana-200-560.png'),
@@ -156,11 +156,11 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     name: 'Giommaria il Locandiere',
     role: 'Maestro di Spie',
     traits: ['Impaziente', 'Ambizioso', 'Avventuriero'],
-    motto: 'Nessuno entra in locanda senza lasciare almeno un gancio.',
+    motto: 'Nessuno entra in locanda senza lasciare almeno un aggancio.',
     detail:
-      'Giommaria vede ogni locanda come un ufficio informazioni con vino incluso. Sa muovere corrieri, voci e favori con velocità inquietante, ma considera la parola prudenza un consiglio opzionale dato da persone poco avventurose.',
+      'Giommaria vede ogni locanda come un ufficio informazioni con vino incluso. Tra osti, contrabbandieri, predoni norreni e mercanti delle rotte carovaniere d’Oriente possiede agganci su mezza Europa, abbastanza da far arrivare spezie, sete e manufatti esotici quando la corte finge di non chiedere nulla. Il suo schema personale resta sempre attivo: accumulare oro, leve e prestigio per una futura spedizione corsara tutta sua.',
     approach:
-      'È perfetto quando serve ridurre il Sospetto o far passare qualcosa senza far irrigidire la corte. Tenere il sigillo reale nelle tue mani evita che apra una seconda agenda.',
+      'È perfetto quando serve ridurre il Sospetto, muovere corrieri discreti o trovare un manufatto raro senza domande ufficiali. Tenere il sigillo reale nelle tue mani evita che trasformi gli agganci della Via della Seta in una seconda agenda politica.',
     warning:
       'Troppa libertà agli informatori crea brindisi, canzoni e domande ostili. Se il Sospetto è già alto, un altro passo falso spezza la fiducia.',
     fullSrc: publicAsset('/character-full-giommaria-200-560.png'),
@@ -175,9 +175,9 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     traits: ['Brillante Stratega', 'Coraggioso', 'Astuto'],
     motto: 'Il morale e il vantaggio decidono ogni campagna.',
     detail:
-      'Alessandro pianifica anche una merenda come se fosse una campagna militare. Le sedie diventano fortezze, il dolce un obiettivo, e il morale una risorsa sacra. Il bello è che spesso funziona, purché qualcuno gli ricordi che il buffet non è una provincia ribelle.',
+      'Alessandro pianifica anche una merenda come se fosse una campagna militare. Le sedie diventano fortezze, il dolce un obiettivo, gli alleati una risorsa di prestigio e il morale un moltiplicatore di Vantaggio. Studia uomini d’arme, psicologia della sala e tratti dei comandanti rivali con precisione clinica; il bello è che spesso funziona, purché qualcuno gli ricordi che il buffet non è una provincia ribelle.',
     approach:
-      'Quando lo Stress sale, Alessandro può trasformare il caos in disciplina. Le sue scelte migliori tengono alto il morale senza militarizzare ogni tovagliolo.',
+      'Quando lo Stress sale, Alessandro può trasformare il caos in disciplina e spirito di gruppo. Le sue scelte migliori tengono alto il morale senza militarizzare ogni tovagliolo, usando alleanze, prestigio e vantaggio tattico come strumenti sociali prima ancora che bellici.',
     warning:
       'Le cariche preventive sembrano divertenti finché la sala non diventa una guerra vera. Se lo Stress è già al massimo, un’altra escalation fa collassare la corte.',
     fullSrc: publicAsset('/character-full-alessandro-200-560.png'),
@@ -193,9 +193,9 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     motto:
       'Un regno resta in piedi se bambini, cugini e zii sanno dove sedersi.',
     detail:
-      'Roberta organizza matrimoni, tavolate di famiglia, merende per i bambini e assaggi nuovi come piccole opere diplomatiche. Non porta Armonia per magia: la costruisce ricordando chi deve sentirsi a casa, chi ha bisogno di un posto vicino ai figli e quale sapore può trasformare un pranzo in un ricordo comune. Quando decide che un rito familiare funziona, sa diventare ostinatamente impossibile da spostare.',
+      'Roberta organizza grandi matrimoni, tavolate di famiglia, merende per i bambini e assaggi nuovi come piccole opere diplomatiche. Non porta Armonia per magia: la costruisce ricordando chi deve sentirsi a casa, chi ha bisogno di un posto vicino ai figli e quale sapore può trasformare un pranzo in un ricordo comune. Da antiquaria di corte conserva tomi, miti e leggende familiari con cura quasi materna; quando decide che un rito domestico funziona, sa diventare ostinatamente impossibile da spostare.',
     approach:
-      'È la voce da ascoltare quando parentele, bambini e tavolate rischiano di diventare caos. Le sue opzioni migliori trasformano famiglia, sapori e tradizioni in un patto sociale, ma la sua testardaggine punisce chi liquida il cerimoniale domestico come dettaglio.',
+      'È la voce da ascoltare quando parentele, bambini e tavolate rischiano di diventare caos. Le sue opzioni migliori trasformano famiglia, sapori, feste sontuose e tradizioni in un patto sociale, ma la sua testardaggine punisce chi liquida il cerimoniale domestico come dettaglio.',
     warning:
       'Dimenticare un ramo della famiglia, ignorare i bambini o trattare gli inviti come dettagli minori rompe l’atmosfera. Se l’Armonia è già bassa, un’altra esclusione rovina la festa.',
     fullSrc: publicAsset('/character-full-roberta-200-560.png'),
@@ -210,9 +210,9 @@ export const councillorProfiles: Record<CouncillorId, CouncillorProfile> = {
     traits: ['Erudito', 'Eccentrico', 'Cinico'],
     motto: 'Mostratemi il miracolo, poi controllerò il metodo sperimentale.',
     detail:
-      'Phabous accetta il sacro con riserva metodologica. Porta calcoli, alambicchi e una certezza fastidiosa: senza prova empirica, anche un miracolo resta una bozza. È il consigliere che può salvare un piano assurdo dimostrando che è solo moderatamente impossibile.',
+      'Phabous ricopre l’autorità spirituale con l’aria di un matematico finito per errore davanti a un altare. Tra alambicchi, cure sperimentali, calcoli sullo sviluppo culturale e sospetti di eresia scientifica, accetta il sacro solo con riserva metodologica: senza prova empirica, anche un miracolo resta una bozza. È il consigliere che può salvare un piano assurdo dimostrando che è solo moderatamente impossibile.',
     approach:
-      'È il jolly finale: può calmare Stress e Sospetto se gli si concede una verifica seria. La sua eresia funziona meglio quando è documentata.',
+      'È il jolly finale: può calmare Stress e Sospetto se gli si concede una verifica seria. La sua eresia funziona meglio quando è documentata, replicabile e abbastanza rigorosa da permettergli di infilarsi in ogni decisione del Consiglio.',
     warning:
       'Liquidare il metodo o gridare al miracolo troppo presto produce pergamene, domande e occhi puntati. Con Sospetto alto, il laboratorio diventa una trappola.',
     fullSrc: publicAsset('/character-full-phabous-200-560.png'),
@@ -297,13 +297,13 @@ export const councilEvents: CouncilEvent[] = [
     id: 'giommaria-inn-hooks',
     councillorId: 'giommaria',
     eyebrow: 'Seconda udienza',
-    title: "Ganci nelle Locande d'Oriente",
+    title: "Agganci nelle Locande d'Oriente",
     setup:
-      "Giommaria arriva con una mappa macchiata di vino e una lista di persone che gli devono favori. I corrieri dell'artefatto possono passare inosservati, a patto che la rete di locande non trasformi la copertura in una spedizione corsara.",
+      "Giommaria arriva con una mappa macchiata di vino, agganci lungo la Via della Seta e una lista di persone che gli devono favori. I corrieri dell'artefatto possono passare inosservati tra sete, spezie e manufatti esotici, a patto che la rete di locande non trasformi la copertura in una spedizione corsara.",
     choices: [
       {
         id: 'sealed-hooks',
-        label: 'Attiva i ganci, ma tieni tu il sigillo reale.',
+        label: 'Attiva gli agganci, ma tieni tu il sigillo reale.',
         preview: '-Oro, -Sospetto',
         statDeltas: { gold: -1, suspicion: -1 },
         awardsSigil: true,
