@@ -37,6 +37,7 @@ import type {
   CouncillorProfile,
   DefeatDefinition,
   EndingDefinition,
+  HeroAsset,
   StatKey,
   StatPreview,
   StatTone,
@@ -1058,14 +1059,16 @@ const DecisionConfirmationModal: React.FC<DecisionConfirmationModalProps> = ({
               Mossa di {councillor.name}
             </Text>
             <Text variant="body1" fontWeight={900} color="#f7e4b1">
-              {choice.result.title}
+              Decreto pronto per il sigillo
             </Text>
             <Text
               variant="body2"
               color="rgb(255 245 218 / 78%)"
               sx={{ lineHeight: 1.55 }}
             >
-              {choice.result.description}
+              {councillor.name} prepara la mossa e attende l&apos;ordine della
+              Regina. Le conseguenze verranno registrate solo dopo la
+              promulgazione.
             </Text>
           </Stack>
         </Stack>
@@ -1334,11 +1337,10 @@ const MainMenuContent: React.FC<MainMenuContentProps> = ({
             startIcon={<PlayArrowIcon />}
             onClick={onNewGame}
             sx={{
+              ...actionButtonSx,
               flex: 1,
               minHeight: 54,
-              borderRadius: 1.5,
-              fontFamily: 'inherit',
-              fontWeight: 900,
+              px: 2,
             }}
           >
             Nuova partita
@@ -1349,14 +1351,14 @@ const MainMenuContent: React.FC<MainMenuContentProps> = ({
             disabled={!storageReady || !hasSavedGame}
             onClick={onLoadGame}
             sx={{
+              ...outlineButtonSx,
               flex: 1,
               minHeight: 54,
-              borderColor: 'rgb(232 197 111 / 40%)',
-              borderRadius: 1.5,
-              color: '#fff7df',
-              fontFamily: 'inherit',
-              fontWeight: 900,
-              textTransform: 'none',
+              px: 2,
+              '&:hover': {
+                borderColor: '#f7d77f',
+                background: 'rgb(232 197 111 / 10%)',
+              },
               '&.Mui-disabled': {
                 borderColor: 'rgb(255 255 255 / 14%)',
                 color: 'rgb(255 245 218 / 36%)',
@@ -1612,7 +1614,6 @@ interface ResultContentProps {
   councillor: CouncillorProfile;
   hasNextEvent: boolean;
   onContinue: () => void;
-  onReset: () => void;
 }
 
 const ResultContent: React.FC<ResultContentProps> = ({
@@ -1620,7 +1621,6 @@ const ResultContent: React.FC<ResultContentProps> = ({
   councillor,
   hasNextEvent,
   onContinue,
-  onReset,
 }) => {
   const earnedSigil = resolution.earnedSigil != null;
 
@@ -1633,7 +1633,7 @@ const ResultContent: React.FC<ResultContentProps> = ({
           letterSpacing={0}
           fontWeight={900}
         >
-          Decreto registrato
+          Conseguenza del decreto
         </Text>
         <Text
           component="h1"
@@ -1688,35 +1688,21 @@ const ResultContent: React.FC<ResultContentProps> = ({
           : 'Tutti i sigilli sono sul tavolo. Ora resta solo il decreto finale.'
           }
         </Text>
-        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            startIcon={<PlayArrowIcon />}
-            onClick={onContinue}
-            sx={{
-              ...actionButtonSx,
-              minHeight: 50,
-              px: 2.5,
-            }}
-          >
-            {hasNextEvent ? 'Prossima udienza' : 'Rivela il decreto finale'}
-          </Button>
-          <Button
-            variant="outlined"
-            size="large"
-            startIcon={<RestartAltIcon />}
-            onClick={onReset}
-            sx={{
-              minHeight: 50,
-              ...outlineButtonSx,
-              px: 2.5,
-            }}
-          >
-            Ricomincia
-          </Button>
-        </Stack>
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          startIcon={<PlayArrowIcon />}
+          onClick={onContinue}
+          sx={{
+            ...actionButtonSx,
+            alignSelf: 'flex-start',
+            minHeight: 50,
+            px: 2.5,
+          }}
+        >
+          {hasNextEvent ? 'Prossima udienza' : 'Rivela il decreto finale'}
+        </Button>
       </Stack>
     </Stack>
   );
@@ -1734,14 +1720,56 @@ interface DefeatContentProps {
   onReset: () => void;
 }
 
+interface EndStateArtworkProps {
+  artwork: HeroAsset;
+  tone: 'victory' | 'defeat';
+}
+
+const EndStateArtwork: React.FC<EndStateArtworkProps> = ({ artwork, tone }) => {
+  const borderColor =
+    tone === 'victory' ? 'rgb(232 197 111 / 34%)' : 'rgb(229 100 75 / 34%)';
+
+  return (
+    <Box
+      sx={{
+        width: 'min(420px, 100%)',
+        maxWidth: '100%',
+        border: `1px solid ${borderColor}`,
+        borderRadius: 1.5,
+        background: 'rgb(0 0 0 / 24%)',
+        boxShadow: '0 18px 50px rgb(0 0 0 / 28%)',
+        alignSelf: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <Box
+        component="img"
+        src={artwork.src}
+        alt={artwork.alt}
+        sx={{
+          display: 'block',
+          width: '100%',
+          aspectRatio: '4 / 3',
+          objectFit: 'cover',
+        }}
+      />
+    </Box>
+  );
+};
+
 const DefeatContent: React.FC<DefeatContentProps> = ({
   gameState,
   defeat,
   onReset,
 }) => {
   return (
-    <Stack gap={2.25} sx={{ flex: 1, minWidth: 0 }}>
-      <Stack gap={1.25}>
+    <Stack
+      gap={1.75}
+      alignItems="center"
+      textAlign="center"
+      sx={{ flex: 1, minWidth: 0 }}
+    >
+      <Stack gap={1.25} alignItems="center" sx={{ width: 'min(760px, 100%)' }}>
         <Text
           variant="overline"
           color="#ffb49d"
@@ -1773,38 +1801,24 @@ const DefeatContent: React.FC<DefeatContentProps> = ({
         </Text>
       </Stack>
 
-      <Stack
-        gap={1}
-        sx={{
-          maxWidth: 760,
-          border: '1px solid rgb(229 100 75 / 32%)',
-          borderRadius: 1.5,
-          background: 'rgb(74 28 24 / 22%)',
-          p: 1.5,
-        }}
+      <EndStateArtwork artwork={defeat.artwork} tone="defeat" />
+
+      <Button
+        variant="contained"
+        size="large"
+        startIcon={<RestartAltIcon />}
+        onClick={onReset}
+        sx={{ ...actionButtonSx, px: 2.5 }}
       >
-        <Text
-          variant="overline"
-          color="#ffb49d"
-          letterSpacing={0}
-          fontWeight={900}
-        >
-          Segnaposto illustrazione
-        </Text>
-        <Text
-          variant="body2"
-          color="rgb(255 245 218 / 78%)"
-          sx={{ lineHeight: 1.55 }}
-        >
-          {defeat.imagePrompt}
-        </Text>
-      </Stack>
+        Nuova partita
+      </Button>
 
       {gameState.latestResolution != null ?
         <Stack
           gap={1}
           sx={{
             maxWidth: 760,
+            textAlign: 'left',
             border: '1px solid rgb(232 197 111 / 24%)',
             borderRadius: 1.5,
             background: 'rgb(0 0 0 / 20%)',
@@ -1824,16 +1838,6 @@ const DefeatContent: React.FC<DefeatContentProps> = ({
           <StatDeltaList choice={gameState.latestResolution.choice} />
         </Stack>
       : null}
-
-      <Button
-        variant="contained"
-        size="large"
-        startIcon={<RestartAltIcon />}
-        onClick={onReset}
-        sx={{ ...actionButtonSx, alignSelf: 'flex-start', px: 2.5 }}
-      >
-        Nuova partita
-      </Button>
     </Stack>
   );
 };
@@ -1844,8 +1848,13 @@ const EndingContent: React.FC<EndingContentProps> = ({
   onOpenArtifact,
 }) => {
   return (
-    <Stack gap={2.25} sx={{ flex: 1, minWidth: 0 }}>
-      <Stack gap={1.25}>
+    <Stack
+      gap={1.75}
+      alignItems="center"
+      textAlign="center"
+      sx={{ flex: 1, minWidth: 0 }}
+    >
+      <Stack gap={1.25} alignItems="center" sx={{ width: 'min(760px, 100%)' }}>
         <Text
           variant="overline"
           color="#e8c56f"
@@ -1886,42 +1895,17 @@ const EndingContent: React.FC<EndingContentProps> = ({
         </Text>
       </Stack>
 
-      <Stack
-        gap={1.25}
-        sx={{
-          maxWidth: 780,
-          border: '1px solid rgb(232 197 111 / 28%)',
-          borderRadius: 1.5,
-          background: 'rgb(0 0 0 / 24%)',
-          p: 1.5,
-        }}
+      <EndStateArtwork artwork={ending.artwork} tone="victory" />
+
+      <Button
+        variant="contained"
+        size="large"
+        startIcon={<PlayArrowIcon />}
+        onClick={onOpenArtifact}
+        sx={{ ...actionButtonSx, px: 2.5 }}
       >
-        <Text
-          variant="overline"
-          color="#e8c56f"
-          letterSpacing={0}
-          fontWeight={900}
-        >
-          Manufatto sigillato
-        </Text>
-        <Text
-          variant="body1"
-          color="rgb(255 245 218 / 80%)"
-          sx={{ lineHeight: 1.55 }}
-        >
-          Il Consiglio arretra di un passo. Nessuno osa rompere il sigillo al
-          posto vostro.
-        </Text>
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={<PlayArrowIcon />}
-          onClick={onOpenArtifact}
-          sx={{ ...actionButtonSx, alignSelf: 'flex-start', px: 2.5 }}
-        >
-          Apri il manufatto
-        </Button>
-      </Stack>
+        Apri il manufatto
+      </Button>
 
       <Stack gap={1.25} sx={{ maxWidth: 780 }}>
         <Text
@@ -2002,7 +1986,12 @@ const ArtifactRevealModal: React.FC<ArtifactRevealModalProps> = ({
     return null;
   }
 
-  const trailerSrc = `${revealAssets.trailerEmbedUrl}?autoplay=1&rel=0`;
+  const trailerParams = new URLSearchParams({
+    autoplay: '1',
+    playsinline: '1',
+    rel: '0',
+  });
+  const trailerSrc = `${revealAssets.trailerEmbedUrl}?${trailerParams.toString()}`;
 
   return (
     <Stack
@@ -2128,7 +2117,6 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
       councillor={currentCouncillor}
       hasNextEvent={gameState.currentEventIndex < councilEvents.length - 1}
       onContinue={onContinue}
-      onReset={onReset}
     />
   );
 };

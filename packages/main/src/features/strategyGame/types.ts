@@ -129,12 +129,14 @@ export interface EndingDefinition {
   title: string;
   text: string;
   revealLine: string;
+  artwork: HeroAsset;
 }
 
 export interface DefeatDefinition {
   reason: DefeatReason;
   title: string;
   text: string;
+  artwork: HeroAsset;
   imagePrompt: string;
 }
 

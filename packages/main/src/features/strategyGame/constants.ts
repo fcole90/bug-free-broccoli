@@ -486,6 +486,10 @@ export const endingDefinitions: Record<EndingTier, EndingDefinition> = {
     text: 'Il Consiglio trattiene il respiro. I sigilli sono allineati, il reame è stabile, e perfino Lauretana non trova una nota spese fuori posto.',
     revealLine:
       'Il manufatto reale è pronto. Resta solo aprirlo senza tremare.',
+    artwork: {
+      src: publicAsset('/ending-dynastic-triumph-800-600.png'),
+      alt: 'Il Consiglio celebra un trionfo dinastico con tutti i sigilli allineati.',
+    },
   },
   'golden-prosperity': {
     tier: 'golden-prosperity',
@@ -493,6 +497,10 @@ export const endingDefinitions: Record<EndingTier, EndingDefinition> = {
     text: 'Le casse tintinnano, i registri sorridono e la corte scopre che perfino un piano cerimoniale può avere un margine di bilancio rispettabile.',
     revealLine:
       'Il manufatto riposa in una custodia degna di un tesoro di corte.',
+    artwork: {
+      src: publicAsset('/ending-golden-prosperity-800-600.png'),
+      alt: 'La corte festeggia una prosperità dorata tra registri e tesori.',
+    },
   },
   'courtly-legend': {
     tier: 'courtly-legend',
@@ -500,18 +508,30 @@ export const endingDefinitions: Record<EndingTier, EndingDefinition> = {
     text: 'Inviti, miti e sorrisi si allineano in una storia che tutti vogliono raccontare. La sorpresa arriva come se fosse sempre stata parte della tradizione.',
     revealLine:
       'Il manufatto attende il rito finale, circondato da un consenso sorprendentemente compatto.',
+    artwork: {
+      src: publicAsset('/ending-courtly-legend-800-600.png'),
+      alt: 'Una leggenda di corte prende forma attorno al manufatto sigillato.',
+    },
   },
   'noble-chaos': {
     tier: 'noble-chaos',
     title: 'Un Nobile Caos',
     text: 'Qualche nervo è saltato e un piano è quasi esploso, ma la corte è ancora in piedi. Il Consiglio decide che questo, in fondo, è pienamente medievale.',
     revealLine: 'Il manufatto è salvo. Probabilmente. Aprirlo chiarirà tutto.',
+    artwork: {
+      src: publicAsset('/ending-noble-chaos-800-600.png'),
+      alt: 'Un nobile caos lascia la corte in piedi nonostante pergamene e tensioni.',
+    },
   },
   'last-resort': {
     tier: 'last-resort',
     title: "L'Ultima Spiaggia",
     text: 'La finzione medievale scricchiola sotto il peso dei decreti, ma non cede. Il Consiglio decide che la dignità può attendere: il manufatto deve arrivare.',
     revealLine: 'La custodia è ammaccata, ma ancora chiusa. È il momento.',
+    artwork: {
+      src: publicAsset('/ending-last-resort-800-600.png'),
+      alt: 'Il Consiglio ricorre all ultima spiaggia per salvare il manufatto.',
+    },
   },
 };
 
@@ -520,6 +540,10 @@ export const defeatDefinitions: Record<DefeatReason, DefeatDefinition> = {
     reason: 'stress-meltdown',
     title: 'Crollo da Stress',
     text: 'Un altro decreto militante, contabile o cerimoniale supera la pazienza della sala. La corte si scioglie in sospiri, sedie spostate e accuse al protocollo.',
+    artwork: {
+      src: publicAsset('/ending-stress-meltdown-800-600.png'),
+      alt: 'La corte crolla per lo stress tra sedie, pergamene e candele spente.',
+    },
     imagePrompt:
       'Immagine futura: la Regina davanti a un tavolo di consiglio rovesciato, candele spente e pergamene sparse come dopo una piccola crisi dinastica.',
   },
@@ -527,6 +551,10 @@ export const defeatDefinitions: Record<DefeatReason, DefeatDefinition> = {
     reason: 'suspicion-exposed',
     title: 'Fiducia Spezzata',
     text: 'Il Sospetto diventa troppo alto. Nobili e consiglieri leggono ogni gesto come una manovra ostile. Il Consiglio sospende il rito perché nessuno si fida più.',
+    artwork: {
+      src: publicAsset('/ending-suspicion-exposed-800-600.png'),
+      alt: 'La fiducia si spezza mentre nobili e consiglieri sospettano ogni gesto.',
+    },
     imagePrompt:
       'Immagine futura: un corridoio di corte con nobili che bisbigliano dietro ventagli, consiglieri a braccia conserte e un sigillo intatto lasciato sul tavolo perché nessuno osa firmare.',
   },
@@ -534,6 +562,10 @@ export const defeatDefinitions: Record<DefeatReason, DefeatDefinition> = {
     reason: 'treasury-empty',
     title: 'Tesoro Prosciugato',
     text: 'Le casse non reggono un’altra spesa. Lauretana chiude il registro con una calma terribile e dichiara sospeso ogni decreto non essenziale.',
+    artwork: {
+      src: publicAsset('/ending-treasury-empty-800-600.png'),
+      alt: 'Il tesoro prosciugato costringe Lauretana a sospendere il decreto.',
+    },
     imagePrompt:
       'Immagine futura: uno scrigno vuoto illuminato da una candela, con Lauretana che tiene una ricevuta lunga quanto una scomunica.',
   },
@@ -541,6 +573,10 @@ export const defeatDefinitions: Record<DefeatReason, DefeatDefinition> = {
     reason: 'harmony-broken',
     title: 'Corte in Frantumi',
     text: 'Un altro sgarbo diplomatico rompe l’Armonia. Gli invitati si dividono in fazioni minuscole e Roberta sorride nel modo che precede le peggiori riunioni.',
+    artwork: {
+      src: publicAsset('/ending-harmony-broken-800-600.png'),
+      alt: 'La corte si spezza in fazioni mentre il banchetto perde armonia.',
+    },
     imagePrompt:
       'Immagine futura: un banchetto diviso in tavoli rivali, coppe intatte e una sedia vuota al centro della sala.',
   },
