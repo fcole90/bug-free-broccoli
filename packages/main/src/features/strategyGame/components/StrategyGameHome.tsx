@@ -146,12 +146,15 @@ const MusicControls: React.FC<MusicControlsProps> = ({
 
   return (
     <Stack
-      direction={{ xs: 'column', sm: 'row' }}
-      alignItems={{ xs: 'stretch', sm: 'center' }}
-      gap={1.25}
+      direction="row"
+      alignItems="center"
+      gap={1}
       sx={{
-        ...panelSx,
-        p: 1,
+        minWidth: 0,
+        border: '1px solid rgb(236 199 117 / 18%)',
+        borderRadius: 1.5,
+        background: 'rgb(0 0 0 / 18%)',
+        p: 0.75,
       }}
     >
       <Button
@@ -160,22 +163,24 @@ const MusicControls: React.FC<MusicControlsProps> = ({
         startIcon={musicEnabled ? <VolumeOffIcon /> : <MusicNoteIcon />}
         onClick={onToggleMusic}
         sx={{
-          minHeight: 42,
+          minHeight: 36,
           borderRadius: 1.5,
           fontFamily: 'inherit',
-          fontWeight: 700,
+          fontSize: 13,
+          fontWeight: 800,
+          px: 1.25,
           whiteSpace: 'nowrap',
         }}
       >
-        {musicEnabled ? 'Disattiva musica' : 'Attiva musica'}
+        {musicEnabled ? 'Spegni' : 'Musica'}
       </Button>
       <Stack
         direction="row"
         alignItems="center"
-        gap={1}
-        sx={{ minWidth: { xs: '100%', sm: 220 } }}
+        gap={0.75}
+        sx={{ flex: '1 1 104px', minWidth: 92 }}
       >
-        <VolumeOffIcon fontSize="small" />
+        <VolumeOffIcon sx={{ fontSize: 17 }} />
         <Box
           component="input"
           type="range"
@@ -191,12 +196,12 @@ const MusicControls: React.FC<MusicControlsProps> = ({
             cursor: 'pointer',
           }}
         />
-        <VolumeUpIcon fontSize="small" />
+        <VolumeUpIcon sx={{ fontSize: 17 }} />
         <Text
-          variant="body2"
-          fontWeight={700}
+          variant="caption"
+          fontWeight={900}
           color="#f7e4b1"
-          sx={{ width: 18, textAlign: 'right' }}
+          sx={{ width: 14, textAlign: 'right' }}
         >
           {musicVolume}
         </Text>
@@ -215,73 +220,153 @@ const StatCard: React.FC<StatCardProps> = ({ stat }) => {
 
   return (
     <Stack
-      gap={0.75}
+      direction="row"
+      alignItems="center"
+      gap={0.65}
       sx={{
         minWidth: 0,
         border: `1px solid ${toneStyle.border}`,
         borderRadius: 1.5,
         background: toneStyle.background,
-        p: 1.25,
+        px: 0.75,
+        py: 0.55,
       }}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={1}
-      >
-        <Stack direction="row" alignItems="center" gap={0.75} minWidth={0}>
-          <Box
-            component="img"
-            src={stat.iconSrc}
-            alt=""
-            sx={{ width: 26, height: 26, flex: '0 0 auto' }}
-          />
-          <Text variant="body2" fontWeight={800} color="#fff7df" noWrap>
+      <Box
+        component="img"
+        src={stat.iconSrc}
+        alt=""
+        sx={{ width: 21, height: 21, flex: '0 0 auto' }}
+      />
+      <Stack gap={0.2} sx={{ flex: '1 1 auto', minWidth: 0 }}>
+        <Stack direction="row" alignItems="center" gap={0.45} minWidth={0}>
+          <Text variant="caption" fontWeight={900} color="#fff7df" noWrap>
             {stat.label}
           </Text>
-        </Stack>
-        <Text variant="caption" fontWeight={800} color={toneStyle.color} noWrap>
-          {stat.valueLabel}
-        </Text>
-      </Stack>
-      <Stack
-        direction="row"
-        gap={0.75}
-        aria-label={`${stat.label}: livello ${stat.valueLabel}`}
-      >
-        {[1, 2, 3].map((pipValue) => {
-          const isActive = pipValue <= stat.value;
-
-          return (
-            <Box
-              key={pipValue}
+          {criticalWarning != null ?
+            <Text
+              variant="caption"
+              fontWeight={900}
+              color="#fff3cf"
+              title={criticalWarning}
               sx={{
-                width: 22,
-                height: 8,
-                borderRadius: 99,
-                background:
-                  isActive ? toneStyle.color : 'rgb(255 255 255 / 18%)',
-                boxShadow: isActive ? `0 0 16px ${toneStyle.color}` : 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 17,
+                height: 17,
+                borderRadius: '50%',
+                background: '#9d3426',
+                flex: '0 0 auto',
+                lineHeight: 1,
               }}
-            />
-          );
-        })}
+            >
+              !
+            </Text>
+          : null}
+        </Stack>
+        <Stack
+          direction="row"
+          gap={0.4}
+          aria-label={`${stat.label}: livello ${stat.valueLabel}`}
+        >
+          {[1, 2, 3].map((pipValue) => {
+            const isActive = pipValue <= stat.value;
+
+            return (
+              <Box
+                key={pipValue}
+                sx={{
+                  width: 14,
+                  height: 5,
+                  borderRadius: 99,
+                  background:
+                    isActive ? toneStyle.color : 'rgb(255 255 255 / 18%)',
+                  boxShadow: isActive ? `0 0 12px ${toneStyle.color}` : 'none',
+                }}
+              />
+            );
+          })}
+        </Stack>
       </Stack>
-      {criticalWarning != null ?
+      <Text variant="caption" fontWeight={900} color={toneStyle.color} noWrap>
+        {stat.valueLabel}
+      </Text>
+    </Stack>
+  );
+};
+
+interface StatSummaryStripProps {
+  stats: readonly StatPreview[];
+}
+
+const StatSummaryStrip: React.FC<StatSummaryStripProps> = ({ stats }) => {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: 'repeat(2, minmax(0, 1fr))',
+          md: 'repeat(4, minmax(0, 1fr))',
+        },
+        gap: 0.65,
+        minWidth: 0,
+      }}
+    >
+      {stats.map((stat) => (
+        <StatCard key={stat.key} stat={stat} />
+      ))}
+    </Box>
+  );
+};
+
+const TopDecreeStatus: React.FC = () => {
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      justifyContent="center"
+      gap={0.85}
+      sx={{
+        minWidth: 0,
+        border: '1px solid rgb(236 199 117 / 18%)',
+        borderRadius: 1.5,
+        background: 'rgb(0 0 0 / 18%)',
+        px: 1,
+        py: 0.75,
+      }}
+    >
+      <Box
+        component="img"
+        src={heroAssets.sealedScrolls.src}
+        alt=""
+        sx={{
+          width: 42,
+          height: 30,
+          objectFit: 'contain',
+          borderRadius: 1,
+          background: 'rgb(0 0 0 / 22%)',
+          flex: '0 0 auto',
+        }}
+      />
+      <Stack
+        gap={0.1}
+        minWidth={0}
+        sx={{ textAlign: { xs: 'left', md: 'center' } }}
+      >
         <Text
           variant="caption"
-          color="#fff3cf"
-          sx={{
-            borderTop: `1px solid ${toneStyle.border}`,
-            lineHeight: 1.35,
-            mt: 0.25,
-            pt: 0.75,
-          }}
+          color="#e8c56f"
+          fontWeight={900}
+          noWrap
+          sx={{ textTransform: 'uppercase' }}
         >
-          {criticalWarning}
+          Decreto sigillato
         </Text>
-      : null}
+        <Text variant="caption" color="rgb(255 245 218 / 70%)" noWrap>
+          Manufatto antico sotto chiave
+        </Text>
+      </Stack>
     </Stack>
   );
 };
@@ -312,13 +397,13 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({
       sx={{
         width: '100%',
         minWidth: 0,
-        minHeight: 138,
+        minHeight: 94,
         border: `1px solid ${selected ? '#e8c56f' : 'rgb(232 197 111 / 20%)'}`,
         borderRadius: 1.5,
         background: selected ? 'rgb(232 197 111 / 12%)' : 'rgb(0 0 0 / 16%)',
         color: '#fff2cf',
         fontFamily: 'inherit',
-        p: 1,
+        p: 0.65,
         textTransform: 'none',
         '&:hover': {
           borderColor: '#e8c56f',
@@ -326,14 +411,14 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({
         },
       }}
     >
-      <Stack alignItems="center" gap={0.75} sx={{ width: '100%', minWidth: 0 }}>
+      <Stack alignItems="center" gap={0.35} sx={{ width: '100%', minWidth: 0 }}>
         <Box
           component="img"
           src={sealSrc}
           alt={`Sigillo di ${seal.name}`}
           sx={{
-            width: 58,
-            height: 58,
+            width: 42,
+            height: 42,
             objectFit: 'contain',
             filter:
               earned || seal.inactiveSealSrc != null ?
@@ -358,8 +443,8 @@ const CouncilSeal: React.FC<CouncilSealProps> = ({
         >
           {earned ? 'Sigillato' : seal.role}
         </Text>
-        <Stack direction="row" alignItems="center" gap={0.35}>
-          <InfoOutlinedIcon sx={{ fontSize: 15 }} />
+        <Stack direction="row" alignItems="center" gap={0.25}>
+          <InfoOutlinedIcon sx={{ fontSize: 13 }} />
           <Text variant="caption" fontWeight={900} color="#f7e4b1" noWrap>
             Scheda
           </Text>
@@ -382,22 +467,22 @@ const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
 }) => {
   return (
     <Stack
-      gap={1.25}
+      gap={0.85}
       sx={{
         border: '1px solid rgb(232 197 111 / 28%)',
         borderRadius: 1.5,
         background: 'rgb(0 0 0 / 24%)',
-        p: 1.5,
+        p: 1.1,
       }}
     >
-      <Stack direction="row" alignItems="center" gap={1.25} minWidth={0}>
+      <Stack direction="row" alignItems="center" gap={1} minWidth={0}>
         <Box
           component="img"
           src={councillor.mugshotSrc}
           alt=""
           sx={{
-            width: 52,
-            height: 52,
+            width: 46,
+            height: 46,
             borderRadius: '50%',
             border: '1px solid rgb(232 197 111 / 44%)',
             flex: '0 0 auto',
@@ -424,21 +509,34 @@ const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
       <Text
         variant="body2"
         color="#f7e4b1"
-        sx={{ fontStyle: 'italic', lineHeight: 1.5 }}
+        noWrap
+        sx={{ fontStyle: 'italic', lineHeight: 1.35 }}
       >
         {`"${councillor.motto}"`}
       </Text>
       <Text
         variant="body2"
         color="rgb(255 245 218 / 76%)"
-        sx={{ lineHeight: 1.55 }}
+        sx={{
+          display: '-webkit-box',
+          lineHeight: 1.35,
+          overflow: 'hidden',
+          WebkitBoxOrient: 'vertical',
+          WebkitLineClamp: 2,
+        }}
       >
         {councillor.detail}
       </Text>
       <Text
         variant="body2"
         color="rgb(255 245 218 / 72%)"
-        sx={{ lineHeight: 1.5 }}
+        sx={{
+          display: '-webkit-box',
+          lineHeight: 1.35,
+          overflow: 'hidden',
+          WebkitBoxOrient: 'vertical',
+          WebkitLineClamp: 2,
+        }}
       >
         {councillor.approach}
       </Text>
@@ -453,7 +551,7 @@ const CouncillorInfoPanel: React.FC<CouncillorInfoPanelProps> = ({
         onClick={() => {
           onOpenDetails(councillor.id);
         }}
-        sx={{ ...outlineButtonSx, alignSelf: 'flex-start' }}
+        sx={{ ...outlineButtonSx, alignSelf: 'flex-start', minHeight: 36 }}
       >
         Apri scheda completa
       </Button>
@@ -644,6 +742,170 @@ const CouncillorProfileModal: React.FC<CouncillorProfileModalProps> = ({
   );
 };
 
+interface DecisionConfirmationModalProps {
+  choice?: CouncilChoice;
+  councillor: CouncillorProfile;
+  onCancel: () => void;
+  onConfirm: (choice: CouncilChoice) => void;
+}
+
+const DecisionConfirmationModal: React.FC<DecisionConfirmationModalProps> = ({
+  choice,
+  councillor,
+  onCancel,
+  onConfirm,
+}) => {
+  if (choice == null) {
+    return null;
+  }
+
+  return (
+    <Stack
+      role="dialog"
+      aria-modal="true"
+      aria-label="Conferma decreto"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 20,
+        background: 'rgb(0 0 0 / 76%)',
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      <Stack
+        gap={2}
+        sx={{
+          ...panelSx,
+          width: 'min(680px, 100%)',
+          maxHeight: 'min(720px, 92dvh)',
+          overflow: 'auto',
+          p: { xs: 2, md: 3 },
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" gap={1.5}>
+          <Stack gap={0.25} minWidth={0}>
+            <Text
+              variant="overline"
+              color="#e8c56f"
+              letterSpacing={0}
+              fontWeight={900}
+            >
+              Decreto in sospeso
+            </Text>
+            <Text variant="h5" fontWeight={900} color="#fff7df">
+              Confermare la decisione?
+            </Text>
+          </Stack>
+          <Button
+            variant="text"
+            startIcon={<CloseIcon />}
+            onClick={onCancel}
+            sx={{
+              color: '#f7e4b1',
+              fontFamily: 'inherit',
+              fontWeight: 900,
+              textTransform: 'none',
+            }}
+          >
+            Chiudi
+          </Button>
+        </Stack>
+
+        <Stack
+          gap={1}
+          sx={{
+            border: '1px solid rgb(232 197 111 / 24%)',
+            borderRadius: 1.5,
+            background: 'rgb(0 0 0 / 22%)',
+            p: 1.5,
+          }}
+        >
+          <Text
+            variant="overline"
+            color="#e8c56f"
+            letterSpacing={0}
+            fontWeight={900}
+          >
+            Azione della Regina
+          </Text>
+          <Text variant="body1" fontWeight={900} color="#fff7df">
+            {choice.label}
+          </Text>
+          <StatDeltaList choice={choice} />
+        </Stack>
+
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          gap={1.25}
+          sx={{
+            border: '1px solid rgb(232 197 111 / 24%)',
+            borderRadius: 1.5,
+            background: 'rgb(0 0 0 / 18%)',
+            p: 1.5,
+          }}
+        >
+          <Box
+            component="img"
+            src={councillor.mugshotSrc}
+            alt=""
+            sx={{
+              width: 58,
+              height: 58,
+              borderRadius: '50%',
+              border: '1px solid rgb(232 197 111 / 44%)',
+              flex: '0 0 auto',
+            }}
+          />
+          <Stack gap={0.5} minWidth={0}>
+            <Text
+              variant="overline"
+              color="#e8c56f"
+              letterSpacing={0}
+              fontWeight={900}
+            >
+              Mossa di {councillor.name}
+            </Text>
+            <Text variant="body1" fontWeight={900} color="#f7e4b1">
+              {choice.result.title}
+            </Text>
+            <Text
+              variant="body2"
+              color="rgb(255 245 218 / 78%)"
+              sx={{ lineHeight: 1.55 }}
+            >
+              {choice.result.description}
+            </Text>
+          </Stack>
+        </Stack>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} gap={1.25}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<PlayArrowIcon />}
+            onClick={() => {
+              onConfirm(choice);
+            }}
+            sx={{ ...actionButtonSx, px: 2.5 }}
+          >
+            Conferma decreto
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={onCancel}
+            sx={{ ...outlineButtonSx, minHeight: 54, px: 2.5 }}
+          >
+            Ripensa la scelta
+          </Button>
+        </Stack>
+      </Stack>
+    </Stack>
+  );
+};
+
 interface StatDeltaListProps {
   choice: CouncilChoice;
 }
@@ -659,24 +921,49 @@ const StatDeltaList: React.FC<StatDeltaListProps> = ({ choice }) => {
         }
 
         const toneStyle = statToneStyles[stat.tone];
+        const sign = delta > 0 ? '+' : '-';
 
         return (
-          <Text
+          <Stack
             key={stat.key}
-            variant="caption"
-            fontWeight={900}
-            color={toneStyle.color}
+            component="span"
+            direction="row"
+            alignItems="center"
+            gap={0.35}
+            aria-label={`${sign}${Math.abs(delta)} ${stat.label}`}
             sx={{
               border: `1px solid ${toneStyle.border}`,
               borderRadius: 99,
               background: 'rgb(0 0 0 / 22%)',
-              px: 0.9,
-              py: 0.3,
+              color: toneStyle.color,
+              px: 0.85,
+              py: 0.18,
             }}
           >
-            {delta > 0 ? '+' : ''}
-            {delta} {stat.label}
-          </Text>
+            <Box
+              component="span"
+              aria-hidden="true"
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                minWidth: 13,
+                fontSize: 19,
+                fontWeight: 900,
+                lineHeight: 1,
+              }}
+            >
+              {sign}
+            </Box>
+            <Text
+              component="span"
+              variant="caption"
+              fontWeight={900}
+              color="inherit"
+              sx={{ lineHeight: 1.25 }}
+            >
+              {Math.abs(delta)} {stat.label}
+            </Text>
+          </Stack>
         );
       })}
     </Stack>
@@ -697,13 +984,15 @@ const ChoiceButton: React.FC<ChoiceButtonProps> = ({ choice, onSelect }) => {
         onSelect(choice);
       }}
       sx={{
+        alignItems: 'stretch',
         justifyContent: 'flex-start',
         borderColor: 'rgb(232 197 111 / 36%)',
         borderRadius: 1.5,
         color: '#fff7df',
         fontFamily: 'inherit',
-        minHeight: 92,
-        p: 1.4,
+        height: '100%',
+        minHeight: { xs: 86, lg: 116, xl: 104 },
+        p: 1.05,
         textAlign: 'left',
         textTransform: 'none',
         '&:hover': {
@@ -712,11 +1001,32 @@ const ChoiceButton: React.FC<ChoiceButtonProps> = ({ choice, onSelect }) => {
         },
       }}
     >
-      <Stack alignItems="flex-start" gap={0.75} sx={{ width: '100%' }}>
-        <Text variant="body1" fontWeight={900} color="inherit">
+      <Stack alignItems="flex-start" gap={0.55} sx={{ width: '100%' }}>
+        <Text
+          variant="body1"
+          fontWeight={900}
+          color="inherit"
+          sx={{
+            display: '-webkit-box',
+            lineHeight: 1.2,
+            overflow: 'hidden',
+            WebkitBoxOrient: 'vertical',
+            WebkitLineClamp: 3,
+          }}
+        >
           {choice.label}
         </Text>
-        <Text variant="body2" color="rgb(255 245 218 / 72%)">
+        <Text
+          variant="body2"
+          color="rgb(255 245 218 / 72%)"
+          sx={{
+            display: '-webkit-box',
+            lineHeight: 1.3,
+            overflow: 'hidden',
+            WebkitBoxOrient: 'vertical',
+            WebkitLineClamp: 2,
+          }}
+        >
           {choice.preview}
         </Text>
         <StatDeltaList choice={choice} />
@@ -1021,8 +1331,8 @@ const EventContent: React.FC<EventContentProps> = ({
   onSelectChoice,
 }) => {
   return (
-    <Stack gap={2} sx={{ flex: 1, minWidth: 0 }}>
-      <Stack gap={1.25}>
+    <Stack gap={1.3} sx={{ flex: 1, minWidth: 0 }}>
+      <Stack gap={0.9}>
         <Text
           variant="overline"
           color="#e8c56f"
@@ -1034,8 +1344,8 @@ const EventContent: React.FC<EventContentProps> = ({
         <Text
           component="h1"
           sx={{
-            maxWidth: 720,
-            fontSize: { xs: 38, md: 48 },
+            maxWidth: 820,
+            fontSize: { xs: 34, md: 42, xl: 46 },
             lineHeight: 1,
             fontWeight: 900,
             color: '#fff3cf',
@@ -1050,8 +1360,8 @@ const EventContent: React.FC<EventContentProps> = ({
             src={councillor.mugshotSrc}
             alt=""
             sx={{
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               borderRadius: '50%',
               border: '1px solid rgb(232 197 111 / 44%)',
             }}
@@ -1068,18 +1378,18 @@ const EventContent: React.FC<EventContentProps> = ({
         <TraitChips traits={councillor.traits} />
       </Stack>
 
-      <Stack gap={1.25} sx={{ maxWidth: 720 }}>
+      <Stack gap={0.85} sx={{ maxWidth: 860 }}>
         <Text
           variant="body1"
           color="rgb(255 245 218 / 84%)"
-          sx={{ lineHeight: 1.55 }}
+          sx={{ lineHeight: 1.42 }}
         >
           {event.setup}
         </Text>
         <Text
           variant="body2"
           color="#f7e4b1"
-          sx={{ fontStyle: 'italic', lineHeight: 1.5 }}
+          sx={{ fontStyle: 'italic', lineHeight: 1.35 }}
         >
           {`"${councillor.motto}"`}
         </Text>
@@ -1092,13 +1402,25 @@ const EventContent: React.FC<EventContentProps> = ({
           sx={{
             alignSelf: 'flex-start',
             ...outlineButtonSx,
+            minHeight: 36,
           }}
         >
           Apri scheda consigliere
         </Button>
       </Stack>
 
-      <Stack gap={1} sx={{ maxWidth: 760 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'repeat(2, minmax(0, 1fr))',
+            xl: 'repeat(3, minmax(0, 1fr))',
+          },
+          gap: 0.8,
+          maxWidth: 980,
+        }}
+      >
         {event.choices.map((choice) => (
           <ChoiceButton
             key={choice.id}
@@ -1106,7 +1428,7 @@ const EventContent: React.FC<EventContentProps> = ({
             onSelect={onSelectChoice}
           />
         ))}
-      </Stack>
+      </Box>
     </Stack>
   );
 };
@@ -1642,6 +1964,7 @@ const MainSceneContent: React.FC<MainSceneContentProps> = ({
 
 const StrategyGameHome: React.FC = () => {
   const [artifactOpen, setArtifactOpen] = useState(false);
+  const [pendingChoice, setPendingChoice] = useState<CouncilChoice>();
   const [profileModalCouncillorId, setProfileModalCouncillorId] =
     useState<CouncillorId>();
   const [selectedCouncillorId, setSelectedCouncillorId] =
@@ -1680,6 +2003,8 @@ const StrategyGameHome: React.FC = () => {
     profileModalCouncillorId == null ? undefined : (
       councillorProfiles[profileModalCouncillorId]
     );
+  const isEndState =
+    gameState.phase === 'ending' || gameState.phase === 'defeat';
   const activeFigure =
     (
       gameState.phase === 'intro' ||
@@ -1691,6 +2016,7 @@ const StrategyGameHome: React.FC = () => {
 
   const handleNewGame = () => {
     setArtifactOpen(false);
+    setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
     beginNewGame();
@@ -1707,6 +2033,7 @@ const StrategyGameHome: React.FC = () => {
       'lauretana';
 
     setArtifactOpen(false);
+    setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(savedCouncillor);
     loadCouncil();
@@ -1714,6 +2041,7 @@ const StrategyGameHome: React.FC = () => {
   };
 
   const handleStartCouncil = () => {
+    setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId(currentEvent.councillorId);
     startCouncil();
@@ -1721,6 +2049,7 @@ const StrategyGameHome: React.FC = () => {
 
   const handleResetCouncil = () => {
     setArtifactOpen(false);
+    setPendingChoice(undefined);
     setProfileModalCouncillorId(undefined);
     setSelectedCouncillorId('lauretana');
     pauseMusic();
@@ -1731,12 +2060,22 @@ const StrategyGameHome: React.FC = () => {
     const nextEventIndex = gameState.currentEventIndex + 1;
 
     setProfileModalCouncillorId(undefined);
+    setPendingChoice(undefined);
 
     if (nextEventIndex < councilEvents.length) {
       setSelectedCouncillorId(councilEvents[nextEventIndex].councillorId);
     }
 
     continueCouncil();
+  };
+
+  const handleSelectChoice = (choice: CouncilChoice) => {
+    setPendingChoice(choice);
+  };
+
+  const handleConfirmChoice = (choice: CouncilChoice) => {
+    setPendingChoice(undefined);
+    selectChoice(choice);
   };
 
   const shellSx = {
@@ -1766,41 +2105,48 @@ const StrategyGameHome: React.FC = () => {
   return (
     <Stack component="main" sx={shellSx}>
       <Stack
-        gap={{ xs: 2, sm: 2, md: 3 }}
+        gap={{ xs: 1.5, sm: 1.5, md: 2 }}
         sx={{
           width: '100%',
-          maxWidth: 1240,
+          maxWidth: 1440,
           mx: 'auto',
-          px: { xs: 2, md: 3 },
-          py: { xs: 2, sm: 2, md: 3 },
+          px: { xs: 2, md: 2.5 },
+          py: { xs: 2, sm: 2, md: 2 },
           height: { sm: '100dvh' },
           minHeight: { xs: '100dvh', sm: 0 },
           overflow: { sm: 'hidden' },
         }}
       >
         <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          justifyContent="space-between"
-          gap={2}
-          sx={{ flex: '0 0 auto' }}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              md: 'minmax(150px, 0.5fr) minmax(205px, 0.66fr) minmax(190px, 0.58fr) minmax(360px, 1.26fr)',
+            },
+            alignItems: 'center',
+            gap: 1.25,
+            flex: '0 0 auto',
+          }}
         >
           <Stack direction="row" alignItems="center" gap={1.25} minWidth={0}>
             <Box
               component="img"
               src={heroAssets.calendar.src}
               alt={heroAssets.calendar.alt}
-              sx={{ width: 32, height: 32 }}
+              sx={{ width: 32, height: 32, flex: '0 0 auto' }}
             />
-            <Stack minWidth={0}>
+            <Stack minWidth={0} sx={{ flex: '1 1 auto' }}>
               <Text
                 variant="overline"
                 letterSpacing={0}
                 color="#e8c56f"
                 fontWeight={800}
+                noWrap
               >
                 Udienza di compleanno
               </Text>
-              <Text variant="body2" color="rgb(255 242 207 / 72%)">
+              <Text variant="body2" color="rgb(255 242 207 / 72%)" noWrap>
                 Scania, sala del trono
               </Text>
             </Stack>
@@ -1811,11 +2157,13 @@ const StrategyGameHome: React.FC = () => {
             onToggleMusic={toggleMusic}
             onVolumeChange={setMusicVolume}
           />
+          <TopDecreeStatus />
+          <StatSummaryStrip stats={statCards} />
         </Stack>
 
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
-          gap={{ xs: 2, md: 3 }}
+          gap={{ xs: 1.5, md: 2 }}
           sx={{
             alignItems: 'stretch',
             flex: { sm: '1 1 auto' },
@@ -1827,13 +2175,13 @@ const StrategyGameHome: React.FC = () => {
             gap={2}
             sx={{
               ...panelSx,
-              flex: { sm: '0 0 58%' },
-              width: { sm: '58%' },
+              flex: { sm: isEndState ? '1 1 100%' : '0 0 64%' },
+              width: { sm: isEndState ? '100%' : '64%' },
               minHeight: { sm: 0 },
               height: { sm: '100%' },
               position: 'relative',
               overflow: { xs: 'hidden', sm: 'auto' },
-              p: { xs: 2, md: 3 },
+              p: { xs: 2, md: 2.25 },
             }}
           >
             <Box
@@ -1846,8 +2194,9 @@ const StrategyGameHome: React.FC = () => {
               }}
             />
             <Stack
-              direction={{ xs: 'column', md: 'row' }}
+              direction={{ xs: 'column', md: isEndState ? 'column' : 'row' }}
               gap={2}
+              alignItems={isEndState ? 'center' : 'stretch'}
               sx={{ position: 'relative', zIndex: 1, height: '100%' }}
             >
               <MainSceneContent
@@ -1865,185 +2214,111 @@ const StrategyGameHome: React.FC = () => {
                   setProfileModalCouncillorId(councillorId);
                 }}
                 onReset={handleResetCouncil}
-                onSelectChoice={selectChoice}
+                onSelectChoice={handleSelectChoice}
               />
 
-              <Stack
-                alignItems="center"
-                justifyContent="flex-end"
-                sx={{
-                  display: { xs: 'none', lg: 'flex' },
-                  minHeight: { xs: 360, md: 540 },
-                  flex: { md: '0 0 260px' },
-                  position: 'relative',
-                  pointerEvents: 'none',
-                }}
-              >
-                <Box
-                  component="img"
-                  src={activeFigure.src}
-                  alt={activeFigure.alt}
+              {isEndState ? null : (
+                <Stack
+                  alignItems="center"
+                  justifyContent="flex-end"
                   sx={{
-                    width: { xs: 180, md: 220 },
-                    maxHeight: { xs: 420, md: 560 },
-                    objectFit: 'contain',
-                    filter: 'drop-shadow(0 28px 46px rgb(0 0 0 / 55%))',
+                    display: { xs: 'none', lg: 'flex' },
+                    minHeight: { xs: 360, md: 540 },
+                    flex: { md: '0 0 190px', xl: '0 0 220px' },
+                    position: 'relative',
                     pointerEvents: 'none',
                   }}
+                >
+                  <Box
+                    component="img"
+                    src={activeFigure.src}
+                    alt={activeFigure.alt}
+                    sx={{
+                      width: { xs: 180, md: 178, xl: 210 },
+                      maxHeight: { xs: 420, md: 560 },
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 28px 46px rgb(0 0 0 / 55%))',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                </Stack>
+              )}
+            </Stack>
+          </Stack>
+
+          {isEndState ? null : (
+            <Stack
+              gap={1.25}
+              sx={{
+                flex: { sm: '1 1 36%' },
+                minWidth: 0,
+                minHeight: 0,
+                height: { sm: '100%' },
+                overflowX: 'hidden',
+                overflowY: { sm: 'auto' },
+                pr: { sm: 0.5 },
+                pb: { sm: 0.5 },
+              }}
+            >
+              <Stack
+                gap={1.1}
+                sx={{
+                  ...panelSx,
+                  p: { xs: 1.5, md: 1.75 },
+                }}
+              >
+                <Text
+                  variant="overline"
+                  color="#e8c56f"
+                  letterSpacing={0}
+                  fontWeight={900}
+                >
+                  Sigilli del Consiglio
+                </Text>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: 'repeat(2, minmax(0, 1fr))',
+                      sm: 'repeat(2, minmax(0, 1fr))',
+                      md: 'repeat(5, minmax(0, 1fr))',
+                    },
+                    gap: 0.7,
+                    justifyItems: 'center',
+                  }}
+                >
+                  {councilSealPreviews.map((seal) => (
+                    <CouncilSeal
+                      key={seal.id}
+                      seal={seal}
+                      earned={earnedSigilSet.has(seal.id)}
+                      selected={selectedCouncillorId === seal.id}
+                      onSelect={setSelectedCouncillorId}
+                    />
+                  ))}
+                </Box>
+                <CouncillorInfoPanel
+                  councillor={selectedCouncillor}
+                  inAudience={
+                    gameState.phase !== 'ending' &&
+                    gameState.phase !== 'defeat' &&
+                    selectedCouncillorId === currentEvent.councillorId
+                  }
+                  onOpenDetails={setProfileModalCouncillorId}
                 />
               </Stack>
             </Stack>
-          </Stack>
-
-          <Stack
-            gap={2}
-            sx={{
-              flex: { sm: '1 1 42%' },
-              minWidth: 0,
-              minHeight: 0,
-              height: { sm: '100%' },
-              overflowX: 'hidden',
-              overflowY: { sm: 'auto' },
-              pr: { sm: 0.5 },
-              pb: { sm: 0.5 },
-            }}
-          >
-            <Stack
-              gap={1.5}
-              sx={{
-                ...panelSx,
-                p: { xs: 2, md: 2.5 },
-              }}
-            >
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                gap={1.5}
-              >
-                <Text
-                  variant="overline"
-                  color="#e8c56f"
-                  letterSpacing={0}
-                  fontWeight={900}
-                >
-                  Stato del reame
-                </Text>
-                <Text variant="body2" color="rgb(255 242 207 / 70%)">
-                  {gameState.phase === 'intro' ?
-                    'Valori iniziali'
-                  : gameState.phase === 'ending' ?
-                    'Decreto finale'
-                  : `Udienza ${gameState.currentEventIndex + 1} / ${councilEvents.length}`
-                  }
-                </Text>
-              </Stack>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, minmax(0, 1fr))',
-                  },
-                  gap: 1.25,
-                }}
-              >
-                {statCards.map((stat) => (
-                  <StatCard key={stat.key} stat={stat} />
-                ))}
-              </Box>
-            </Stack>
-
-            <Stack
-              gap={1.5}
-              sx={{
-                ...panelSx,
-                p: { xs: 2, md: 2.5 },
-              }}
-            >
-              <Text
-                variant="overline"
-                color="#e8c56f"
-                letterSpacing={0}
-                fontWeight={900}
-              >
-                Sigilli del Consiglio
-              </Text>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: 'repeat(2, minmax(0, 1fr))',
-                    sm: 'repeat(2, minmax(0, 1fr))',
-                    md: 'repeat(3, minmax(0, 1fr))',
-                  },
-                  gap: 1.25,
-                  justifyItems: 'center',
-                }}
-              >
-                {councilSealPreviews.map((seal) => (
-                  <CouncilSeal
-                    key={seal.id}
-                    seal={seal}
-                    earned={earnedSigilSet.has(seal.id)}
-                    selected={selectedCouncillorId === seal.id}
-                    onSelect={setSelectedCouncillorId}
-                  />
-                ))}
-              </Box>
-              <CouncillorInfoPanel
-                councillor={selectedCouncillor}
-                inAudience={
-                  gameState.phase !== 'ending' &&
-                  gameState.phase !== 'defeat' &&
-                  selectedCouncillorId === currentEvent.councillorId
-                }
-                onOpenDetails={setProfileModalCouncillorId}
-              />
-            </Stack>
-
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              gap={1.5}
-              sx={{
-                ...panelSx,
-                p: { xs: 2, md: 2.5 },
-              }}
-            >
-              <Box
-                component="img"
-                src={heroAssets.sealedScrolls.src}
-                alt={heroAssets.sealedScrolls.alt}
-                sx={{
-                  width: { xs: '100%', sm: 190 },
-                  height: 112,
-                  objectFit: 'contain',
-                  borderRadius: 1,
-                  background: 'rgb(0 0 0 / 24%)',
-                }}
-              />
-              <Stack gap={0.75} justifyContent="center" minWidth={0}>
-                <Text
-                  variant="overline"
-                  color="#e8c56f"
-                  letterSpacing={0}
-                  fontWeight={900}
-                >
-                  Decreto sigillato
-                </Text>
-                <Text
-                  variant="body1"
-                  color="rgb(255 245 218 / 84%)"
-                  sx={{ lineHeight: 1.5 }}
-                >
-                  La vera natura della concessione resta chiusa dietro
-                  pergamene, sigilli e una quantità sospetta di cerimoniale.
-                </Text>
-              </Stack>
-            </Stack>
-          </Stack>
+          )}
         </Stack>
       </Stack>
+      <DecisionConfirmationModal
+        choice={pendingChoice}
+        councillor={currentCouncillor}
+        onCancel={() => {
+          setPendingChoice(undefined);
+        }}
+        onConfirm={handleConfirmChoice}
+      />
       <CouncillorProfileModal
         councillor={profileModalCouncillor}
         onClose={() => {
