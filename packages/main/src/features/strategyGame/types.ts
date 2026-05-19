@@ -21,7 +21,9 @@ export type CouncillorId =
   | 'roberta'
   | 'phabous';
 
-export type GamePhase = 'intro' | 'event' | 'result';
+export type GamePhase = 'intro' | 'event' | 'result' | 'ending';
+
+export type EndingTier = 'dynastic-triumph' | 'noble-chaos' | 'last-resort';
 
 export interface MusicConfig {
   src: string;
@@ -31,6 +33,12 @@ export interface MusicConfig {
 export interface HeroAsset {
   src: string;
   alt: string;
+}
+
+export interface RevealAssets {
+  giftJumbo: HeroAsset;
+  giftBundle: HeroAsset;
+  trailerEmbedUrl: string;
 }
 
 export interface StatPreview {
@@ -102,10 +110,19 @@ export interface ChoiceResolution {
   earnedSigil?: CouncillorId;
 }
 
+export interface EndingDefinition {
+  tier: EndingTier;
+  title: string;
+  text: string;
+  revealLine: string;
+}
+
 export interface CouncilGameState {
   phase: GamePhase;
   stats: GameStats;
   earnedSigils: readonly CouncillorId[];
+  history: readonly ChoiceResolution[];
   currentEventIndex: number;
   latestResolution?: ChoiceResolution;
+  endingTier?: EndingTier;
 }

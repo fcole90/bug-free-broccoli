@@ -11,29 +11,43 @@ import type {
   CouncilChoice,
   CouncilGameState,
   CouncillorId,
+  EndingTier,
   GamePhase,
   GameStats,
   StatDelta,
   StatLevel,
 } from '../types';
 
+interface PersistedChoiceResolution {
+  eventIndex: number;
+  choiceId: string;
+  previousStats: GameStats;
+  nextStats: GameStats;
+}
+
 interface PersistedCouncilGameState {
-  version: 1;
+  version: 2;
   phase: GamePhase;
   stats: GameStats;
   earnedSigils: CouncillorId[];
+  history: PersistedChoiceResolution[];
   currentEventIndex: number;
-  latestChoiceId?: string;
-  previousStats?: GameStats;
+  endingTier?: EndingTier;
 }
 
-const persistedStateVersion = 1;
-const gamePhases: readonly GamePhase[] = ['intro', 'event', 'result'];
+const persistedStateVersion = 2;
+const gamePhases: readonly GamePhase[] = ['intro', 'event', 'result', 'ending'];
+const endingTiers: readonly EndingTier[] = [
+  'dynastic-triumph',
+  'noble-chaos',
+  'last-resort',
+];
 
 const createInitialGameState = (): CouncilGameState => ({
   phase: 'intro',
   stats: initialGameStats,
   earnedSigils: [],
+  history: [],
   currentEventIndex: 0,
 });
 
@@ -91,6 +105,32 @@ const createChoiceResolution = (
   };
 };
 
+const countWorstStats = (stats: GameStats) => {
+  const worstValues = [
+    stats.stress === 3,
+    stats.gold === 1,
+    stats.harmony === 1,
+    stats.suspicion === 3,
+  ];
+
+  return worstValues.filter(Boolean).length;
+};
+
+const calculateEndingTier = (
+  stats: GameStats,
+  earnedSigils: readonly CouncillorId[],
+): EndingTier => {
+  if (earnedSigils.length <= 1 || countWorstStats(stats) >= 2) {
+    return 'last-resort';
+  }
+
+  if (earnedSigils.length >= 4 && stats.stress !== 3) {
+    return 'dynastic-triumph';
+  }
+
+  return 'noble-chaos';
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value != null && !Array.isArray(value);
 
@@ -99,6 +139,9 @@ const isStatLevel = (value: unknown): value is StatLevel =>
 
 const isGamePhase = (value: unknown): value is GamePhase =>
   typeof value === 'string' && gamePhases.includes(value as GamePhase);
+
+const isEndingTier = (value: unknown): value is EndingTier =>
+  typeof value === 'string' && endingTiers.includes(value as EndingTier);
 
 const isCouncillorId = (value: unknown): value is CouncillorId => {
   const councillorIds: readonly string[] = councillorOrder;
@@ -160,6 +203,61 @@ const parseCurrentEventIndex = (value: unknown): number | undefined => {
   return value;
 };
 
+const parsePersistedChoiceResolution = (
+  value: unknown,
+): ChoiceResolution | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const eventIndex = parseCurrentEventIndex(value.eventIndex);
+  const choiceId = value.choiceId;
+  const previousStats = parseGameStats(value.previousStats);
+  const nextStats = parseGameStats(value.nextStats);
+
+  if (
+    eventIndex == null ||
+    typeof choiceId !== 'string' ||
+    previousStats == null ||
+    nextStats == null
+  ) {
+    return undefined;
+  }
+
+  const event = councilEvents[eventIndex];
+  const choice = event.choices.find(
+    (eventChoice) => eventChoice.id === choiceId,
+  );
+
+  if (choice == null) {
+    return undefined;
+  }
+
+  return createChoiceResolution(eventIndex, choice, previousStats, nextStats);
+};
+
+const parseHistory = (
+  value: unknown,
+): readonly ChoiceResolution[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const history: ChoiceResolution[] = [];
+
+  for (const item of value) {
+    const resolution = parsePersistedChoiceResolution(item);
+
+    if (resolution == null) {
+      return undefined;
+    }
+
+    history.push(resolution);
+  }
+
+  return history;
+};
+
 const parsePersistedGameState = (
   value: unknown,
 ): CouncilGameState | undefined => {
@@ -170,15 +268,33 @@ const parsePersistedGameState = (
   const phase = isGamePhase(value.phase) ? value.phase : undefined;
   const stats = parseGameStats(value.stats);
   const earnedSigils = parseEarnedSigils(value.earnedSigils);
+  const history = parseHistory(value.history);
   const currentEventIndex = parseCurrentEventIndex(value.currentEventIndex);
 
   if (
     phase == null ||
     stats == null ||
     earnedSigils == null ||
+    history == null ||
     currentEventIndex == null
   ) {
     return undefined;
+  }
+
+  const endingTier =
+    isEndingTier(value.endingTier) ?
+      value.endingTier
+    : calculateEndingTier(stats, earnedSigils);
+
+  if (phase === 'ending') {
+    return {
+      phase,
+      stats,
+      earnedSigils,
+      history,
+      currentEventIndex,
+      endingTier,
+    };
   }
 
   if (phase !== 'result') {
@@ -186,23 +302,16 @@ const parsePersistedGameState = (
       phase,
       stats,
       earnedSigils,
+      history,
       currentEventIndex,
     };
   }
 
-  const latestChoiceId = value.latestChoiceId;
-  const previousStats = parseGameStats(value.previousStats);
-
-  if (typeof latestChoiceId !== 'string' || previousStats == null) {
-    return undefined;
-  }
-
-  const event = councilEvents[currentEventIndex];
-  const choice = event.choices.find(
-    (eventChoice) => eventChoice.id === latestChoiceId,
+  const latestResolution = history.findLast(
+    (resolution) => resolution.event.id === councilEvents[currentEventIndex].id,
   );
 
-  if (choice == null) {
+  if (latestResolution == null) {
     return undefined;
   }
 
@@ -210,15 +319,22 @@ const parsePersistedGameState = (
     phase,
     stats,
     earnedSigils,
+    history,
     currentEventIndex,
-    latestResolution: createChoiceResolution(
-      currentEventIndex,
-      choice,
-      previousStats,
-      stats,
-    ),
+    latestResolution,
   };
 };
+
+const serializeResolution = (
+  resolution: ChoiceResolution,
+): PersistedChoiceResolution => ({
+  eventIndex: councilEvents.findIndex(
+    (event) => event.id === resolution.event.id,
+  ),
+  choiceId: resolution.choice.id,
+  previousStats: resolution.previousStats,
+  nextStats: resolution.nextStats,
+});
 
 const serializeGameState = (
   gameState: CouncilGameState,
@@ -228,12 +344,12 @@ const serializeGameState = (
     phase: gameState.phase,
     stats: gameState.stats,
     earnedSigils: [...gameState.earnedSigils],
+    history: gameState.history.map(serializeResolution),
     currentEventIndex: gameState.currentEventIndex,
   };
 
-  if (gameState.latestResolution != null) {
-    persistedState.latestChoiceId = gameState.latestResolution.choice.id;
-    persistedState.previousStats = gameState.latestResolution.previousStats;
+  if (gameState.endingTier != null) {
+    persistedState.endingTier = gameState.endingTier;
   }
 
   return persistedState;
@@ -307,6 +423,31 @@ export const useCouncilGame = () => {
     setGameState(createInitialGameState());
   }, []);
 
+  const continueCouncil = useCallback(() => {
+    setGameState((previousState) => {
+      const nextEventIndex = previousState.currentEventIndex + 1;
+
+      if (nextEventIndex < councilEvents.length) {
+        return {
+          ...previousState,
+          phase: 'event',
+          currentEventIndex: nextEventIndex,
+          latestResolution: undefined,
+        };
+      }
+
+      return {
+        ...previousState,
+        phase: 'ending',
+        endingTier: calculateEndingTier(
+          previousState.stats,
+          previousState.earnedSigils,
+        ),
+        latestResolution: undefined,
+      };
+    });
+  }, []);
+
   const selectChoice = useCallback((choice: CouncilChoice) => {
     setGameState((previousState) => {
       const nextStats = applyChoiceToStats(previousState.stats, choice);
@@ -325,6 +466,7 @@ export const useCouncilGame = () => {
           previousState.earnedSigils,
           resolution.earnedSigil,
         ),
+        history: [...previousState.history, resolution],
         latestResolution: resolution,
       };
     });
@@ -342,6 +484,7 @@ export const useCouncilGame = () => {
     earnedSigilSet,
     startCouncil,
     resetCouncil,
+    continueCouncil,
     selectChoice,
   };
 };

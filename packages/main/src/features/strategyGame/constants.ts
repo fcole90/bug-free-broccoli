@@ -3,9 +3,12 @@ import type {
   CouncilEvent,
   CouncillorId,
   CouncillorProfile,
+  EndingDefinition,
+  EndingTier,
   GameStats,
   HeroAsset,
   MusicConfig,
+  RevealAssets,
   StatPreview,
   StatLevel,
 } from './types';
@@ -29,7 +32,7 @@ export const initialGameStats: GameStats = {
   suspicion: 2,
 };
 
-export const councilGameStorageKey = 'genetliaco:council-game-state:v1';
+export const councilGameStorageKey = 'genetliaco:council-game-state:v2';
 
 export const gameTitle = 'Il Consiglio del Genetliaco';
 
@@ -65,6 +68,18 @@ export const heroAssets: Record<
     src: publicAsset('/minimap-scania.png'),
     alt: 'Mappa stilizzata di Scania',
   },
+};
+
+export const revealAssets: RevealAssets = {
+  giftJumbo: {
+    src: publicAsset('/gift-jumbo.png'),
+    alt: 'Crusader Kings III Starter Edition',
+  },
+  giftBundle: {
+    src: publicAsset('/gift-bundle.png'),
+    alt: 'Contenuto del bundle Crusader Kings III Starter Edition',
+  },
+  trailerEmbedUrl: 'https://www.youtube.com/embed/xjn66Cl3pMA',
 };
 
 export const statDefinitions: Omit<StatPreview, 'value' | 'valueLabel'>[] = [
@@ -256,7 +271,213 @@ export const councilEvents: CouncilEvent[] = [
       },
     ],
   },
+  {
+    id: 'giommaria-inn-hooks',
+    councillorId: 'giommaria',
+    eyebrow: 'Seconda udienza',
+    title: "Ganci nelle Locande d'Oriente",
+    setup:
+      "Giommaria arriva con una mappa macchiata di vino e una lista di persone che gli devono favori. I corrieri dell'artefatto possono passare inosservati, a patto che la rete di locande non trasformi la copertura in una spedizione corsara.",
+    choices: [
+      {
+        id: 'sealed-hooks',
+        label: 'Attiva i ganci, ma tieni tu il sigillo reale.',
+        preview: '-Oro, -Sospetto',
+        statDeltas: { gold: -1, suspicion: -1 },
+        awardsSigil: true,
+        result: {
+          title: 'Ombre ben pagate',
+          description:
+            'La rete si muove nella notte. Giommaria sorride: abbastanza libertà da divertirsi, non abbastanza da fondare una contea pirata.',
+        },
+      },
+      {
+        id: 'royal-cellars',
+        label: 'Apri le cantine reali agli informatori.',
+        preview: '-Stress, +Sospetto',
+        statDeltas: { stress: -1, suspicion: 1 },
+        awardsSigil: false,
+        result: {
+          title: 'Brindisi pericolosi',
+          description:
+            'Le informazioni arrivano abbondanti, insieme a tre canzoni e a un brindisi che contiene troppi indizi.',
+        },
+      },
+      {
+        id: 'norse-cover-raid',
+        label: 'Inscena una razzia norrena di copertura.',
+        preview: '+Stress, -Sospetto',
+        statDeltas: { stress: 1, suspicion: -1 },
+        awardsSigil: false,
+        result: {
+          title: 'Predoni da corridoio',
+          description:
+            "Nessuno parla più dell'artefatto. Tutti parlano però dei finti predoni nel corridoio.",
+        },
+      },
+    ],
+  },
+  {
+    id: 'alessandro-surprise-campaign',
+    councillorId: 'alessandro',
+    eyebrow: 'Terza udienza',
+    title: 'La Campagna della Sorpresa',
+    setup:
+      'Alessandro schiera una mappa tattica della sala da pranzo. Le sedie diventano fortezze, il dolce un obiettivo strategico, e il morale degli alleati deve reggere fino al segnale convenuto.',
+    choices: [
+      {
+        id: 'disciplined-campaign',
+        label: 'Approva il piano, ma vieta assedi al buffet.',
+        preview: '-Stress, +Armonia',
+        statDeltas: { stress: -1, harmony: 1 },
+        awardsSigil: true,
+        result: {
+          title: 'Fronte sotto controllo',
+          description:
+            'Il Maresciallo accetta la disciplina. Per la prima volta, la linea del fronte coincide con il buon senso.',
+        },
+      },
+      {
+        id: 'full-war-council',
+        label: 'Convoca un consiglio di guerra completo.',
+        preview: '+Stress, +Armonia',
+        statDeltas: { stress: 1, harmony: 1 },
+        awardsSigil: false,
+        result: {
+          title: 'Promozioni improvvise',
+          description:
+            'Tutti ricevono un ruolo. Anche chi voleva solo sedersi viene promosso a comandante del tovagliolo sinistro.',
+        },
+      },
+      {
+        id: 'kitchen-charge',
+        label: 'Ordina una carica preventiva verso la cucina.',
+        preview: '+Stress, -Oro',
+        statDeltas: { stress: 1, gold: -1 },
+        awardsSigil: false,
+        result: {
+          title: 'Cucina conquistata',
+          description:
+            'La cucina cade in pochi minuti. La misura strategica, purtroppo, resta dispersa dietro le linee.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'roberta-banquet-diplomacy',
+    councillorId: 'roberta',
+    eyebrow: 'Quarta udienza',
+    title: 'Diplomazia da Banchetto',
+    setup:
+      'Donna Roberta porta inviti, miti e una calma psicologica che potrebbe pacificare due casate rivali. La sorpresa richiede calore umano, una leggenda condivisa e nessun nobile dimenticato fuori dalla sala.',
+    choices: [
+      {
+        id: 'shared-legend',
+        label: 'Fai aggiungere a ciascuno un verso alla leggenda.',
+        preview: '+Armonia, -Stress',
+        statDeltas: { harmony: 1, stress: -1 },
+        awardsSigil: true,
+        result: {
+          title: 'Mito collettivo',
+          description:
+            'La storia diventa collettiva, caotica e molto vostra. Roberta prende nota come se stesse salvando il patrimonio culturale.',
+        },
+      },
+      {
+        id: 'lavish-banquet',
+        label: 'Organizza un banchetto impeccabile e costosissimo.',
+        preview: '+Armonia, -Oro',
+        statDeltas: { harmony: 1, gold: -1 },
+        awardsSigil: false,
+        result: {
+          title: 'Protocollo splendente',
+          description:
+            'Gli invitati applaudono, il Tesoro tossisce, e Roberta salva entrambi con un sorriso diplomatico.',
+        },
+      },
+      {
+        id: 'optional-invitations',
+        label: 'Dichiara facoltativa la diplomazia degli inviti.',
+        preview: '-Armonia, +Sospetto',
+        statDeltas: { harmony: -1, suspicion: 1 },
+        awardsSigil: false,
+        result: {
+          title: 'Serenità terrificante',
+          description:
+            'Roberta annota la frase con una serenità terrificante. Qualcuno nota subito chi non è stato invitato.',
+        },
+      },
+    ],
+  },
+  {
+    id: 'phabous-artifact-heresy',
+    councillorId: 'phabous',
+    eyebrow: 'Quinta udienza',
+    title: "L'Eresia dell'Artefatto",
+    setup:
+      "Phabous posa sul tavolo calcoli, diagrammi e una candela usata come variabile di controllo. L'artefatto è quasi pronto, ma nessun miracolo verrà riconosciuto senza prova empirica e almeno una piccola eresia metodologica.",
+    choices: [
+      {
+        id: 'peer-review',
+        label: '[Erudita] Pretendi una revisione tra pari.',
+        preview: '-Stress, -Sospetto',
+        statDeltas: { stress: -1, suspicion: -1 },
+        awardsSigil: true,
+        result: {
+          title: 'Eresia verificata',
+          description:
+            "L'eresia funziona. Tra formule e sigilli emerge una verità quasi pronta, ma ancora abbastanza nascosta.",
+        },
+      },
+      {
+        id: 'controlled-experiment',
+        label: 'Concedi un esperimento controllato, lontano dalle tende.',
+        preview: '+Armonia, -Oro',
+        statDeltas: { harmony: 1, gold: -1 },
+        awardsSigil: false,
+        result: {
+          title: 'Scintilla contenuta',
+          description:
+            'Una scintilla conferma la teoria. Le tende restano nel regno dei vivi, che tutti considerano un successo.',
+        },
+      },
+      {
+        id: 'declare-miracle',
+        label: 'Dichiara il miracolo e chiudi il laboratorio.',
+        preview: '+Stress, +Sospetto',
+        statDeltas: { stress: 1, suspicion: 1 },
+        awardsSigil: false,
+        result: {
+          title: 'Metodologia insufficiente',
+          description:
+            "Phabous obbedisce, ma scrive 'metodologia insufficiente' su una pergamena abbastanza lunga da destare sospetti.",
+        },
+      },
+    ],
+  },
 ];
+
+export const endingDefinitions: Record<EndingTier, EndingDefinition> = {
+  'dynastic-triumph': {
+    tier: 'dynastic-triumph',
+    title: 'Trionfo Dinastico',
+    text: 'Il Consiglio trattiene il respiro. I sigilli sono allineati, il reame è stabile, e perfino Lauretana non trova una nota spese fuori posto.',
+    revealLine: 'Hai vinto Crusader Kings III: il bundle reale ti attende!',
+  },
+  'noble-chaos': {
+    tier: 'noble-chaos',
+    title: 'Un Nobile Caos',
+    text: 'Qualche indizio è trapelato, un piano è quasi esploso, ma la corte è ancora in piedi. Il Consiglio decide che questo, in fondo, è pienamente in stile CK3.',
+    revealLine:
+      'Sorpresa: il misterioso artefatto è il bundle di Crusader Kings III!',
+  },
+  'last-resort': {
+    tier: 'last-resort',
+    title: "L'Ultima Spiaggia",
+    text: 'La finzione medievale collassa sotto il peso dei decreti. Il Consiglio rompe il personaggio, chiede perdono per il roleplay troppo elaborato e consegna direttamente il dono.',
+    revealLine: 'Buon compleanno, Regina Georgia: il CK3 bundle è tuo.',
+  },
+};
 
 export const openingLines = [
   'Mia Signora, il Vostro Genetliaco si avvicina.',
