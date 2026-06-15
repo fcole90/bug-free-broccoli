@@ -1122,8 +1122,8 @@ acorn@^8.15.0:
 
 "agentic-tools@github:swiftpostlab/agentic-tools":
   version "0.1.0"
-  uid dfcc619e6218a0e13ca54a59e228517e681be901
-  resolved "https://codeload.github.com/swiftpostlab/agentic-tools/tar.gz/dfcc619e6218a0e13ca54a59e228517e681be901"
+  uid "8fbc8dd1631496bf30388a7a044a5b88f4ff7b05"
+  resolved "https://codeload.github.com/swiftpostlab/agentic-tools/tar.gz/8fbc8dd1631496bf30388a7a044a5b88f4ff7b05"
   dependencies:
     citty "^0.2.2"
     consola "^3.4.2"
